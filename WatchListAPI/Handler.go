@@ -1,12 +1,14 @@
-package handlers
+package main
 
 import (
 	"encoding/json"
 	"net/http"
+	"fmt"
 )
 
-type request struct {
-	Name string `json:"name"`
+type CreateWatchlistRequest struct {
+	Name    string            `json:"name"`
+	Tickers map[string]string `json:"tickers"`
 }
 
 func Health(w http.ResponseWriter, r *http.Request) {
@@ -20,8 +22,9 @@ func CreateWatchlist(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var req request
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	var req CreateWatchlistRequest
+	err := json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
 		http.Error(w, "Invalid JSON", http.StatusBadRequest)
 		return
 	}
@@ -31,4 +34,9 @@ func CreateWatchlist(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]string{
 		"status": "watchlist created",
 	})
+
+	fmt.Printf("%s:\n", req.Name)
+	for ticker, condition := range req.Tickers {
+		fmt.Printf("    %s: %s\n", ticker, condition) 
+	}
 }
