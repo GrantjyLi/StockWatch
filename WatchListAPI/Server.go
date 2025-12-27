@@ -1,11 +1,17 @@
 package main
 
 import (
+	"database/sql"
 	"log"
 	"net/http"
 )
 
+var database *sql.DB
+
 func main() {
+	database := DB_connect()
+	defer database.Close()
+
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/Health", Health)

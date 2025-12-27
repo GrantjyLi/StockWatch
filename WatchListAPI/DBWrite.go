@@ -7,13 +7,13 @@ import (
 	"os"
 
 	_ "github.com/jackc/pgx/v5/stdlib"
+	"github.com/google/uuid"
 	"github.com/joho/godotenv"
 )
 
 const ENV_FILE = "WatchListAPI.env"
 
-func DB_writeWatchlist() {
-
+func DB_connect() *sql.DB {
 	err := godotenv.Load(ENV_FILE)
     if err != nil {
         log.Fatal("Error loading .env file")
@@ -33,15 +33,42 @@ func DB_writeWatchlist() {
 		os.Exit(1)
 	}
 
-	// db.Close() is deferred to ensure the connection is closed when the main function exits.
-	defer db.Close()
-
-	// Call db.Ping() to verify that the database connection is alive and establishable.
+	// ping to verify that the database connection is alive/establishable
 	pingErr := db.Ping()
 	if pingErr != nil {
 		// log.Fatal prints the error and then calls os.Exit(1).
 		log.Fatal(pingErr)
 	}
 
-	fmt.Println("Successfully connected to the database!")
+	return db
+}
+
+func DB_writeWatchlist(watchlistData CreateWatchlistRequest) {
+	userID := "eb0dcdff-741d-437c-ad64-35b267a91494"
+	watchlistID := uuid.New()
+
+	_, err = tx.Exec(
+		`INSERT INTO watchlists (id, user_id, name)
+		VALUES ($1, $2, $3)`,
+		watchlistID,
+		userID,
+		watchlistData.Name,
+	)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+
+	alertID := uuid.New()
+	_, err = tx.Exec(
+		`INSERT INTO alerts (id, watchlist_id, ticker, operator, target_price)
+		VALUES ($1, $2, $3, $4, $5)`,
+		alertID,
+		watchlistID
+		userID,
+		watchlistName,
+	)
+	if err != nil {
+		log.Fatal(err)
+	}
 }

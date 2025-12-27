@@ -7,8 +7,8 @@ import (
 )
 
 type CreateWatchlistRequest struct {
-	Name    string            `json:"name"`
-	Tickers map[string]string `json:"tickers"`
+	name    string            `json:"name"`
+	tickers map[string]string `json:"tickers"`
 }
 
 func Health(w http.ResponseWriter, r *http.Request) {
@@ -35,8 +35,8 @@ func CreateWatchlist(w http.ResponseWriter, r *http.Request) {
 		"status": "watchlist created",
 	})
 
-	fmt.Printf("%s:\n", req.Name)
-	for ticker, condition := range req.Tickers {
+	fmt.Printf("%s:\n", req.name)
+	for ticker, condition := range req.tickers {
 		fmt.Printf("    %s: %s\n", ticker, condition) 
 	}
 }
