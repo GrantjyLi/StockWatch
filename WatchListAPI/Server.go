@@ -7,9 +7,8 @@ import (
 )
 
 var database *sql.DB
-
 func main() {
-	database := DB_connect()
+	database = DB_connect()
 	defer database.Close()
 
 	mux := http.NewServeMux()

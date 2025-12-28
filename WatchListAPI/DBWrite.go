@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/google/uuid"
@@ -39,36 +40,54 @@ func DB_connect() *sql.DB {
 		// log.Fatal prints the error and then calls os.Exit(1).
 		log.Fatal(pingErr)
 	}
-
 	return db
 }
 
-func DB_writeWatchlist(watchlistData CreateWatchlistRequest) {
-	userID := "eb0dcdff-741d-437c-ad64-35b267a91494"
-	watchlistID := uuid.New()
+func DB_writeWatchlist(watchlistData WatchlistRequest) {
+	tx, err := database.Begin()
+	if err != nil { log.Fatal(err) }
+	defer tx.Rollback() // safe rollback if commit never happens
 
-	_, err = tx.Exec(
-		`INSERT INTO watchlists (id, user_id, name)
-		VALUES ($1, $2, $3)`,
+	userID := "eb0dcdff-741d-437c-ad64-35b267a91494"
+	watchlistID := uuid.New().String()
+
+	watchlistQuery := fmt.Sprintf("INSERT INTO watchlists (id, user_id, name)\nVALUES ('%s', '%s', '%s');",
 		watchlistID,
 		userID,
 		watchlistData.Name,
 	)
+	fmt.Println(watchlistQuery)
+
+	_, err = tx.Exec(watchlistQuery)
 	if err != nil {
 		log.Fatal(err)
 	}
 
+	alertsQuery := "INSERT INTO alerts (id, watchlist_id, ticker, operator, target_price)\nValues"
+	rows := []string{}
+	for ticker, alert := range watchlistData.Tickers {
+		parts := strings.SplitN(alert, " ", 2)
+		inequality := parts[0]
+		price := parts[1]
 
-	alertID := uuid.New()
-	_, err = tx.Exec(
-		`INSERT INTO alerts (id, watchlist_id, ticker, operator, target_price)
-		VALUES ($1, $2, $3, $4, $5)`,
-		alertID,
-		watchlistID
-		userID,
-		watchlistName,
-	)
+		row := fmt.Sprintf("('%s', '%s', '%s', '%s', %s)",
+			uuid.New().String(),
+			watchlistID,
+			ticker,
+			inequality,
+			price,
+		)
+
+		rows = append(rows, row)
+	}
+
+	alertsQuery += strings.Join(rows, ",\n")
+	fmt.Println(alertsQuery)
+
+	_, err = tx.Exec(alertsQuery)
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	if err := tx.Commit(); err != nil { log.Fatal(err) }
 }
