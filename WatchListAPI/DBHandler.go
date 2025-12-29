@@ -14,6 +14,9 @@ import (
 
 const ENV_FILE = "WatchListAPI.env"
 
+//TODO: change this later
+var userID := "eb0dcdff-741d-437c-ad64-35b267a91494"
+
 func DB_connect() *sql.DB {
 	err := godotenv.Load(ENV_FILE)
     if err != nil {
@@ -43,12 +46,11 @@ func DB_connect() *sql.DB {
 	return db
 }
 
-func DB_writeWatchlist(watchlistData WatchlistRequest) {
+func DB_writeWatchlist(watchlistData CreateWatchlistRequest) {
 	tx, err := database.Begin()
 	if err != nil { log.Fatal(err) }
 	defer tx.Rollback() // safe rollback if commit never happens
 
-	userID := "eb0dcdff-741d-437c-ad64-35b267a91494"
 	watchlistID := uuid.New().String()
 
 	watchlistQuery := fmt.Sprintf("INSERT INTO watchlists (id, user_id, name)\nVALUES ('%s', '%s', '%s');",
@@ -90,4 +92,10 @@ func DB_writeWatchlist(watchlistData WatchlistRequest) {
 	}
 
 	if err := tx.Commit(); err != nil { log.Fatal(err) }
+}
+
+func DB_getWatchlists(userData GetWatchlistsRequest){
+	wlRows, err := database.Query(`SELECT id, name FROM watchlists WHERE user_id = $1`, userData.ID)
+
+
 }
