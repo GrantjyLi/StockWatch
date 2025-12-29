@@ -14,8 +14,16 @@ import (
 
 const ENV_FILE = "WatchListAPI.env"
 
+type alertRow struct { 
+	Name string 
+	Ticker string
+	Operator string
+	TargetPrice float64 
+}
+
 //TODO: change this later
-var userID := "eb0dcdff-741d-437c-ad64-35b267a91494"
+var userID = "eb0dcdff-741d-437c-ad64-35b267a91494"
+//var userID = "b573d9e3-5f72-47a4-bc4f-2a882fccb3bb"
 
 func DB_connect() *sql.DB {
 	err := godotenv.Load(ENV_FILE)
@@ -46,7 +54,7 @@ func DB_connect() *sql.DB {
 	return db
 }
 
-func DB_writeWatchlist(watchlistData CreateWatchlistRequest) {
+func DB_writeWatchlist(watchlistData Watchlist) {
 	tx, err := database.Begin()
 	if err != nil { log.Fatal(err) }
 	defer tx.Rollback() // safe rollback if commit never happens
@@ -95,7 +103,17 @@ func DB_writeWatchlist(watchlistData CreateWatchlistRequest) {
 }
 
 func DB_getWatchlists(userData GetWatchlistsRequest){
-	wlRows, err := database.Query(`SELECT id, name FROM watchlists WHERE user_id = $1`, userData.ID)
+	rows, err := database.Query(
+		`SELECT watchlists.name, alerts.ticker, alerts.operator, alerts.target_price
+		FROM watchlists
+		JOIN alerts
+		ON alerts.watchlist_id = watchlists.id
+		WHERE watchlists.user_id = '$1';`,
+		userData.ID
+	)
+
+	if err != nil { return nil, err }
+	defer rows.Close()
 
 
 }

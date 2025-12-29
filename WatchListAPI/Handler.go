@@ -5,7 +5,7 @@ import (
 	"net/http"
 )
 
-type CreateWatchlistRequest struct {
+type Watchlist struct {
 	Name    string            `json:"name"`
 	Tickers map[string]string `json:"tickers"`
 }
@@ -27,7 +27,7 @@ type GetWatchlistsRequest struct {
 }
 */
 
-func checkMethod(r *http.Request) bool {
+func checkMethod(w http.ResponseWriter, r *http.Request) bool {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return false
@@ -41,9 +41,9 @@ func Health(w http.ResponseWriter, r *http.Request) {
 }
 
 func CreateWatchlist(w http.ResponseWriter, r *http.Request) {
-	if checkMethod(r) == false {return}
+	if checkMethod(w, r) == false {return}
 
-	var req CreateWatchlistRequest
+	var req Watchlist
 	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
 		http.Error(w, "Invalid JSON", http.StatusBadRequest)
@@ -58,20 +58,20 @@ func CreateWatchlist(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func GetWatchlists(w http.ResponseWriter, r *http.Request) {
-    if checkMethod(r) == false {return}
+// func GetWatchlists(w http.ResponseWriter, r *http.Request) {
+//     if checkMethod(w, r) == false {return}
 
-	var req GetWatchlistsRequest
-	err := json.NewDecoder(r.Body).Decode(&req)
-	if err != nil {
-		http.Error(w, "Invalid JSON", http.StatusBadRequest)
-		return
-	}
+// 	var req GetWatchlistsRequest
+// 	err := json.NewDecoder(r.Body).Decode(&req)
+// 	if err != nil {
+// 		http.Error(w, "Invalid JSON", http.StatusBadRequest)
+// 		return
+// 	}
 
-    // Fetch from DB (you implement this)
-    DB_getWatchlists(req)
+//     // Fetch from DB (you implement this)
+//     DB_getWatchlists(req)
 
-    w.Header().Set("Content-Type", "application/json")
-    json.NewEncoder(w).Encode(watchlists)
-}
+//     w.Header().Set("Content-Type", "application/json")
+//     json.NewEncoder(w).Encode(watchlists)
+// }
 
