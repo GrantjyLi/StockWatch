@@ -1,31 +1,33 @@
 import React from "react";
 
-export default function WatchlistCard({ watchlistData, onToggle }) {
+export default function WatchlistCard({ WID, watchlistData, onToggle }) {
+  const tickers = watchlistData.tickers
+
   return (
     <div style={styles.card}>
       <h3>{watchlistData.name}</h3>
-      <small>{watchlistData.items.length} Items</small>
+      <small>{tickers.length} Items</small>
 
       <div style={styles.items}>
-        {watchlistData.items.map((i, idx) => (
-          <div key={idx} style={styles.item}>
-            <span>{i.symbol}</span>
+        {Object.entries(tickers).map(([ticker, condition]) => (
+          <div key={WID} style={styles.item}>
+            <span>{ticker}</span>
             <span>
-              {i.condition}${i.price}
+              {condition}
             </span>
           </div>
         ))}
-        {watchlistData.items.length === 0 && <span>…</span>}
+        {tickers.length === 0 && <span>…</span>}
       </div>
 
-      <label style={styles.toggle}>
+      {/* <label style={styles.toggle}>
         <span>{watchlistData.enabled ? "On" : "Off"}</span>
         <input
           type="checkbox"
           checked={watchlist.enabled}
           onChange={onToggle}
         />
-      </label>
+      </label> */}
     </div>
   );
 }

@@ -6,11 +6,11 @@ import WatchlistCardNew from "./WatchlistCardNew";
 export default function WatchlistGrid({ watchlists, onAdd, onToggle }) {
   return (
     <div style={styles.container}>
-      {watchlists.map((w) => (
+      {Object.entries(watchlists).map(([id, data]) => (
         <WatchlistCard
-          key={w.id}
-          watchlistData={w}
-          onToggle={() => onToggle(w.id)}
+          WID={id}
+          watchlistData={data}
+          onToggle={() => onToggle(id)}
         />
       ))}
       <WatchlistCardNew onAdd={onAdd} />

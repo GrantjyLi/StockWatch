@@ -10,7 +10,7 @@ try {
         headers: { "Content-Type": "application/json" }
       }
     );
-
+    
     return response.data; // returns the data as a JS object
   } catch (error) {
     console.error(error);
