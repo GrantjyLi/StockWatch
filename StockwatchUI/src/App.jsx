@@ -3,10 +3,12 @@ import React from "react";
 import { useState, useEffect} from "react";
 import Header from "./components/Header";
 import WatchlistGrid from "./components/WatchlistGrid";
+import AddWatchlistPopup from "./components/AddWatchlistPopup";
 import { getWatchlists } from "./APIInterface"
 
 export default function App() {
   const [watchlists, setWatchlists] = useState([]);
+  const [showAddWatchlistPopup, setShowAddPopup] = useState(false);
 
   useEffect(() => {
     async function fetchWatchlists() {
@@ -18,6 +20,7 @@ export default function App() {
   }, []); // empty array → runs only once on page refresh
 
   const addWatchlist = () => {
+    setShowAddPopup(true)
     // setWatchlists([
     //   ...watchlists,
     //   {
@@ -42,6 +45,9 @@ export default function App() {
   return (
     <>
       <Header />
+      {showAddWatchlistPopup && (
+        <AddWatchlistPopup onClose={() => setShowAddPopup(false)} />
+      )}
       <WatchlistGrid
         watchlists={watchlists}
         onAdd={addWatchlist}

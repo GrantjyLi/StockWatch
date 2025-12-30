@@ -1,6 +1,5 @@
 import React from "react";
 
-
 export default function WatchlistCardNew({ onAdd }) {
   return (
     <div style={styles.card} onClick={onAdd}>
