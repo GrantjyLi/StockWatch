@@ -7,29 +7,23 @@ import (
 	"os"
 	"strings"
 
-	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/google/uuid"
+	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/joho/godotenv"
 )
 
 const ENV_FILE = "WatchListAPI.env"
 
-type alertRow struct { 
-	Name string 
-	Ticker string
-	Operator string
-	TargetPrice float64 
-}
-
-//TODO: change this later
+// TODO: change this later
 var userID = "eb0dcdff-741d-437c-ad64-35b267a91494"
+
 //var userID = "b573d9e3-5f72-47a4-bc4f-2a882fccb3bb"
 
 func DB_connect() *sql.DB {
 	err := godotenv.Load(ENV_FILE)
-    if err != nil {
-        log.Fatal("Error loading .env file")
-    }
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
 
 	DB_USER := os.Getenv("DATABASE_USER")
 	DB_PW := os.Getenv("DATABASE_PASSWORD")
@@ -56,7 +50,9 @@ func DB_connect() *sql.DB {
 
 func DB_writeWatchlist(watchlistData Watchlist) {
 	tx, err := database.Begin()
-	if err != nil { log.Fatal(err) }
+	if err != nil {
+		log.Fatal(err)
+	}
 	defer tx.Rollback() // safe rollback if commit never happens
 
 	watchlistID := uuid.New().String()
@@ -66,7 +62,6 @@ func DB_writeWatchlist(watchlistData Watchlist) {
 		userID,
 		watchlistData.Name,
 	)
-	fmt.Println(watchlistQuery)
 
 	_, err = tx.Exec(watchlistQuery)
 	if err != nil {
@@ -99,21 +94,55 @@ func DB_writeWatchlist(watchlistData Watchlist) {
 		log.Fatal(err)
 	}
 
-	if err := tx.Commit(); err != nil { log.Fatal(err) }
+	if err := tx.Commit(); err != nil {
+		log.Fatal(err)
+	}
 }
 
-func DB_getWatchlists(userData GetWatchlistsRequest){
+func DB_getWatchlists(userData GetWatchlistsRequest) (map[string]*Watchlist, error) {
 	rows, err := database.Query(
-		`SELECT watchlists.name, alerts.ticker, alerts.operator, alerts.target_price
-		FROM watchlists
-		JOIN alerts
+		`SELECT watchlists.name, watchlists.id, alerts.ticker, alerts.operator, alerts.target_price
+		FROM watchlists JOIN alerts
 		ON alerts.watchlist_id = watchlists.id
-		WHERE watchlists.user_id = '$1';`,
-		userData.ID
+		WHERE watchlists.user_id = $1;`,
+		userData.ID,
 	)
 
-	if err != nil { return nil, err }
+	if err != nil {
+		log.Fatal(err)
+	}
 	defer rows.Close()
 
+	watchlists := make(map[string]*Watchlist)
+	var watchlistName, watchlistID, ticker, operator string
+	var targetPrice float64
 
+	for rows.Next() {
+		if err := rows.Scan(&watchlistName, &watchlistID, &ticker, &operator, &targetPrice); err != nil {
+			log.Fatal(err)
+		}
+
+		// Create watchlist entry if not exists
+		WL, exists := watchlists[watchlistID]
+		if !exists {
+			WL = &Watchlist{
+				Name:    watchlistName,
+				Tickers: make(map[string]string),
+			}
+			watchlists[watchlistID] = WL
+		}
+
+		// Add alert to the watchlist
+		WL.Tickers[ticker] = fmt.Sprintf("%s %.2f", operator, targetPrice)
+	}
+
+	// for id, watchlist := range watchlists {
+	// 	fmt.Printf("%s:\n", id)
+	// 	fmt.Printf("    %s\n", watchlist.Name)
+	// 	for ticker, condition := range watchlist.Tickers {
+	// 		fmt.Printf("    %s:%s\n", ticker, condition)
+	// 	}
+	// }
+
+	return watchlists, nil
 }

@@ -1,14 +1,13 @@
 import React from "react";
 
-
-export default function WatchlistCard({ watchlist, onToggle }) {
+export default function WatchlistCard({ watchlistData, onToggle }) {
   return (
     <div style={styles.card}>
-      <h3>{watchlist.name}</h3>
-      <small>{watchlist.items.length} Items</small>
+      <h3>{watchlistData.name}</h3>
+      <small>{watchlistData.items.length} Items</small>
 
       <div style={styles.items}>
-        {watchlist.items.map((i, idx) => (
+        {watchlistData.items.map((i, idx) => (
           <div key={idx} style={styles.item}>
             <span>{i.symbol}</span>
             <span>
@@ -16,11 +15,11 @@ export default function WatchlistCard({ watchlist, onToggle }) {
             </span>
           </div>
         ))}
-        {watchlist.items.length === 0 && <span>…</span>}
+        {watchlistData.items.length === 0 && <span>…</span>}
       </div>
 
       <label style={styles.toggle}>
-        <span>{watchlist.enabled ? "On" : "Off"}</span>
+        <span>{watchlistData.enabled ? "On" : "Off"}</span>
         <input
           type="checkbox"
           checked={watchlist.enabled}

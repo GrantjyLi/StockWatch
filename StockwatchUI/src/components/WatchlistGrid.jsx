@@ -1,6 +1,5 @@
 import React from "react";
 
-
 import WatchlistCard from "./WatchlistCard";
 import WatchlistCardNew from "./WatchlistCardNew";
 
@@ -10,7 +9,7 @@ export default function WatchlistGrid({ watchlists, onAdd, onToggle }) {
       {watchlists.map((w) => (
         <WatchlistCard
           key={w.id}
-          watchlist={w}
+          watchlistData={w}
           onToggle={() => onToggle(w.id)}
         />
       ))}

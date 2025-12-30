@@ -1,43 +1,34 @@
 import React from "react";
 
-import { useState } from "react";
+import { useState, useEffect} from "react";
 import Header from "./components/Header";
 import WatchlistGrid from "./components/WatchlistGrid";
+import { getWatchlists } from "./APIInterface"
 
 export default function App() {
-  const [watchlists, setWatchlists] = useState([
-    {
-      id: 1,
-      name: "Watchlist #1",
-      enabled: true,
-      items: [
-        { symbol: "AAPL", condition: ">=", price: 1190 },
-        { symbol: "AAPL", condition: "<=", price: 1000 },
-        { symbol: "AAPL", condition: "=", price: 1300 },
-      ],
-    },
-    {
-      id: 2,
-      name: "Watchlist #2",
-      enabled: true,
-      items: [
-        { symbol: "AAPL", condition: ">=", price: 1190 },
-        { symbol: "AAPL", condition: "<=", price: 1000 },
-        { symbol: "AAPL", condition: "=", price: 1300 },
-      ],
-    },
-  ]);
+  const [watchlists, setWatchlists] = useState([]);
+
+  useEffect(() => {
+    async function fetchWatchlists() {
+      const data = await getWatchlists(); // assume this returns JSON
+      setWatchlists(data);
+    }
+
+    fetchWatchlists();
+  }, []); // empty array → runs only once on page refresh
 
   const addWatchlist = () => {
-    setWatchlists([
-      ...watchlists,
-      {
-        id: Date.now(),
-        name: `Watchlist #${watchlists.length + 1}`,
-        enabled: true,
-        items: [],
-      },
-    ]);
+    // setWatchlists([
+    //   ...watchlists,
+    //   {
+    //     id: Date.now(),
+    //     name: `Watchlist #${watchlists.length + 1}`,
+    //     enabled: true,
+    //     items: [],
+    //   },
+    // ]);
+
+    console.log("adding watchlist")
   };
 
   const toggleWatchlist = (id) => {
