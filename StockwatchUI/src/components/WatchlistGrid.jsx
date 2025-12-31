@@ -4,28 +4,28 @@ import WatchlistCard from "./WatchlistCard";
 import WatchlistCardNew from "./WatchlistCardNew";
 
 export default function WatchlistGrid({ watchlists, onAdd, onToggle }) {
-  return (
+    return (
     <div style={styles.container}>
-      {Object.entries(watchlists).map(([id, data]) => (
+        {Object.entries(watchlists).map(([id, data]) => (
         <WatchlistCard
-          WID={id}
-          watchlistData={data}
-          onToggle={() => onToggle(id)}
+            WID={id}
+            watchlistData={data}
+            onToggle={() => onToggle(id)}
         />
-      ))}
-      <WatchlistCardNew onAdd={onAdd} />
+        ))}
+        <WatchlistCardNew onAdd={onAdd} />
     </div>
-  );
+    );
 }
 
 const styles = {
-  container: {
-    background: "#B9B7B7",
-    margin: 20,
-    padding: 30,
-    borderRadius: 40,
-    display: "flex",
-    gap: 20,
-    flexWrap: "wrap",
-  },
+    container: {
+        background: "#B9B7B7",
+        margin: 20,
+        padding: 30,
+        borderRadius: 40,
+        display: "flex",
+        gap: 20,
+        flexWrap: "wrap",
+    },
 };

@@ -4,55 +4,71 @@ import { useState, useEffect} from "react";
 import Header from "./components/Header";
 import WatchlistGrid from "./components/WatchlistGrid";
 import AddWatchlistPopup from "./components/AddWatchlistPopup";
-import { getWatchlists } from "./APIInterface"
+import ErrorPopup from "./components/ErrorMSGPopup";
+import { checkHealth, getWatchlists, createWatchlist } from "./APIInterface"
 
 export default function App() {
-  const [watchlists, setWatchlists] = useState([]);
-  const [showAddWatchlistPopup, setShowAddPopup] = useState(false);
+    const [serverStatus, setServerStatus] = useState(false);
+    const [errorPopup, setErrorPopup] = useState(false);
+    const [errorMessage, setErrorMessage] = useState("");
+    const [watchlists, setWatchlists] = useState([]);
+    const [showAddWatchlistPopup, setShowAddPopup] = useState(false);
 
-  useEffect(() => {
     async function fetchWatchlists() {
-      const data = await getWatchlists(); // assume this returns JSON
-      setWatchlists(data);
+        const data = await getWatchlists(); // assume this returns JSON
+        setWatchlists(data);
     }
 
-    fetchWatchlists();
-  }, []); // empty array → runs only once on page refresh
+    async function init() {
+        const health = await checkHealth();
+        
+        if (health === null) {
+            setErrorPopup(true)
+            setErrorMessage("Server is Down")
+            return; // stop here
+        }
+        
+        console.log("Server Health Check:", health);
+        setServerStatus(true)
+        await fetchWatchlists();
+    }
 
-  const addWatchlist = () => {
-    setShowAddPopup(true)
-    // setWatchlists([
-    //   ...watchlists,
-    //   {
-    //     id: Date.now(),
-    //     name: `Watchlist #${watchlists.length + 1}`,
-    //     enabled: true,
-    //     items: [],
-    //   },
-    // ]);
+    useEffect(() => {
+        init();
+    }, []); // empty array → runs only once on page refresh
 
-    console.log("adding watchlist")
-  };
+    const addNewWatchlist = (WatchlistName, newAlerts) => {
+        var newWatchlistData = {
+            "name": WatchlistName,
+            "tickers": {}
+        }
+        for (const alert of newAlerts){
+            newWatchlistData["tickers"][alert["ticker"]] = `${alert["operator"]} ${alert["price"]}`
+        }
 
-  const toggleWatchlist = (id) => {
-    setWatchlists((prev) =>
-      prev.map((w) =>
-        w.id === id ? { ...w, enabled: !w.enabled } : w
-      )
+        createWatchlist(newWatchlistData)
+        setShowAddPopup(false)
+    }
+
+    return (
+      <>
+          <Header />
+            {errorPopup && (
+                <ErrorPopup 
+                    message={errorMessage}
+                    onClose={() => setErrorPopup(false)} 
+                />
+            )}
+            {showAddWatchlistPopup && (
+                <AddWatchlistPopup 
+                    addNewWatchlist={addNewWatchlist}
+                    onClose={() => setShowAddPopup(false)} 
+                />
+            )}
+            <WatchlistGrid
+                watchlists={watchlists}
+                onAdd={()=>setShowAddPopup(true)}
+            />
+        </>
     );
-  };
-
-  return (
-    <>
-      <Header />
-      {showAddWatchlistPopup && (
-        <AddWatchlistPopup onClose={() => setShowAddPopup(false)} />
-      )}
-      <WatchlistGrid
-        watchlists={watchlists}
-        onAdd={addWatchlist}
-        onToggle={toggleWatchlist}
-      />
-    </>
-  );
 }

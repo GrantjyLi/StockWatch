@@ -17,7 +17,7 @@ CREATE TABLE alerts (
   id UUID PRIMARY KEY,
   watchlist_id UUID REFERENCES watchlists(id),
   ticker TEXT NOT NULL,
-  operator TEXT CHECK (operator IN ('>=', '<=')),
+  operator TEXT CHECK (operator IN ('>=', '<=', '=')),
   target_price NUMERIC NOT NULL,
 
   triggered BOOLEAN DEFAULT false,

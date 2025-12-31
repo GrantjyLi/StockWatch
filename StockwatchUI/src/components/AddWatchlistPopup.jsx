@@ -1,53 +1,60 @@
 import React from "react";
 import { useState } from "react";
+import WatchlistAddAlert from "./WatchlistAddAlert";
 
-export default function AddWatchlistPopup({ onClose }) {
-  const [rows, setRows] = useState([{ ticker: "", condition: "", price: "" }]);
+export default function AddWatchlistPopup({ addNewWatchlist, onClose }) {
+    const [watchlistName, setWatchlistName] = useState([]);
+    const [newAlerts, setNewAlerts] = useState([]);
 
-  const addRow = () => {
-    setRows([...rows, { ticker: "", condition: "", price: "" }]);
-  };
+    const addRow = () => {
+        setNewAlerts([...newAlerts, { ticker: "", operator: ">=", price: "" }]);
+    };
 
-  const removeRow = (index) => {
-    setRows(rows.filter((_, i) => i !== index));
-  };
+    const removeRow = (index) => {
+        setNewAlerts(newAlerts.filter((_, i) => i !== index));
+    };
 
-  return (
-    <div style={styles.overlay}>
-      <div style={styles.modal}>
+    const updateRow = (index, updatedRow) => {
+        setNewAlerts(
+        newAlerts.map((row, i) =>
+            i === index ? updatedRow : row
+        )
+        );
+    };
 
-        <div style={styles.header}>Add Watchlist</div>
+    return (
+        <div style={styles.overlay}>
+            <div style={styles.modal}>
+            <div style={styles.header}>Add Watchlist</div>
 
-        <div style={styles.body}>
-          <label style={styles.label}>Watchlist Name</label>
-          <input style={styles.input} />
+            <div style={styles.body}>
+                <label style={styles.label}>Watchlist Name</label>
+                <input style={styles.input} onChange={(e) => setWatchlistName(e.target.value)}/>
 
-          <div style={styles.row}>
-            <input style={styles.input} placeholder="Ticker" />
-            <select style={styles.input} name="cars" id="cars">
-                <option value=">=">&gt;=</option>
-                <option value="<=">&lt;=</option>
-                <option value="=">=</option>
-            </select>
-            <input style={styles.input} placeholder="Price" type="number" step="any" min="0" name="amount"/>
-            <button style={styles.removeX}>✕</button>
-          </div>
+                {newAlerts.map((alertRowData, index) => (
+                    <WatchlistAddAlert
+                        key={index}
+                        alertData={alertRowData}
+                        onChange={(newRow) => updateRow(index, newRow)}
+                        onRemove={() => removeRow(index)}
+                    />
+                ))}
 
-          <button style={styles.addRow}>+</button>
+                <button style={styles.addRow} onClick={addRow}>+</button>
+            </div>
+
+            <div style={styles.footer}>
+                <button style={styles.footerButton} onClick={()=>addNewWatchlist(watchlistName, newAlerts)}>
+                    Add Watchlist
+                </button>
+                <button style={styles.footerButton} onClick={onClose}>
+                    Cancel
+                </button>
+            </div>
+
+            </div>
         </div>
-
-        <div style={styles.footer}>
-          <button style={styles.footerButton} onClick={onClose}>
-            Remove
-          </button>
-          <button style={styles.footerButton}>
-            Add
-          </button>
-        </div>
-
-      </div>
-    </div>
-  );
+    );
 }
 
 const styles = {
@@ -100,14 +107,6 @@ const styles = {
     display: "flex",
     alignItems: "center",
     gap: 6,
-  },
-
-  removeX: {
-    marginLeft: "auto",
-    background: "none",
-    border: "none",
-    fontSize: 18,
-    cursor: "pointer",
   },
 
   addRow: {
