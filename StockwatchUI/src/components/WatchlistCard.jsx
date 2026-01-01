@@ -1,19 +1,24 @@
 import React from "react";
 
-export default function WatchlistCard({ WID, watchlistData }) {
+export default function WatchlistCard({ WID, watchlistData, deleteWatchlist }) {
     const alerts = watchlistData.alerts
-    console.log(alerts)
     return (
-        <div style={styles.card}>
+        <div style={styles.card} key={WID}>
+            <button
+                style={styles.deleteBtn}
+                onClick={()=>{deleteWatchlist(WID)}}
+            >
+                ✕
+            </button>
             <h3>{watchlistData.name}</h3>
             <small>{alerts.length} Items</small>
 
             <div style={styles.items}>
-            {Object.entries(alerts).map(([alertID, ticker, operator, price]) => (
-                <div key={alertID} style={styles.item}>
-                <span>{ticker}</span>
+            {alerts.map((alert) => (
+                <div key={alert.ID} style={styles.item}>
+                <span>{alert.ticker}</span>
                 <span>
-                    {operator}{price}
+                    {`${alert.operator} ${alert.price}`}
                 </span>
                 </div>
             ))}
@@ -29,7 +34,8 @@ const styles = {
         borderRadius: 20,
         padding: 20,
         width: 250,
-        fontFamily: "Arial, Helvetica, sans-serif"
+        fontFamily: "Arial, Helvetica, sans-serif",
+        position: "relative"
     },
     items: {
         background: "rgba(0,0,0,0.1)",
@@ -46,4 +52,15 @@ const styles = {
         display: "flex",
         justifyContent: "space-between",
     },
+    deleteBtn: {
+        position: "absolute",
+        top: 8,
+        right: 8,
+        padding: "4px 8px",
+        fontSize: 12,
+        cursor: "pointer",
+        fontWeight: "bold",        
+        background: "transparent",  
+        border: "none",             
+  },
 };

@@ -3,14 +3,14 @@ import React from "react";
 import WatchlistCard from "./WatchlistCard";
 import WatchlistCardNew from "./WatchlistCardNew";
 
-export default function WatchlistGrid({ watchlists, onAdd, onToggle }) {
+export default function WatchlistGrid({ watchlists, onAdd, onDelete }) {
     return (
     <div style={styles.container}>
         {Object.entries(watchlists).map(([id, data]) => (
         <WatchlistCard
             WID={id}
             watchlistData={data}
-            onToggle={() => onToggle(id)}
+            deleteWatchlist={onDelete}
         />
         ))}
         <WatchlistCardNew onAdd={onAdd} />

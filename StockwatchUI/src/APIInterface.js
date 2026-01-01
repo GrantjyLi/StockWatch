@@ -18,11 +18,11 @@ export async function checkHealth() {
 }
 
 
-export async function getWatchlists(){
+export async function getWatchlists(userID){
     try {
         const response = await axios.post(
             `${STOCKWATCH_API_URL}/GetWatchlists`,
-            { ID: "eb0dcdff-741d-437c-ad64-35b267a91494" },
+            { ID: userID },
             { headers: { "Content-Type": "application/json" } }
         );
     
@@ -45,5 +45,20 @@ export async function createWatchlist(watchlistData) {
     } catch (error) {
         console.error(error);
         return {};
+    }
+}
+
+export async function deleteWatchlist(watchlistData){
+    try {
+        const response = await axios.post(
+            `${STOCKWATCH_API_URL}/DeleteWatchlist`,
+            watchlistData,
+            { headers: { "Content-Type": "application/json" } }
+        );
+    
+        return response.data; // returns the data as a JS object
+    }catch (error) {
+        console.error(error);
+        return {}; // return empty object on error
     }
 }

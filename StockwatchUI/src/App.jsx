@@ -5,17 +5,18 @@ import Header from "./components/Header";
 import WatchlistGrid from "./components/WatchlistGrid";
 import AddWatchlistPopup from "./components/AddWatchlistPopup";
 import ErrorPopup from "./components/ErrorMSGPopup";
-import { checkHealth, getWatchlists, createWatchlist } from "./APIInterface"
+import { checkHealth, getWatchlists, deleteWatchlist, createWatchlist } from "./APIInterface"
 
 export default function App() {
     const [serverStatus, setServerStatus] = useState(false);
     const [errorPopup, setErrorPopup] = useState(false);
     const [errorMessage, setErrorMessage] = useState("");
+    const [userID, setUserId] = useState("eb0dcdff-741d-437c-ad64-35b267a91494");
     const [watchlists, setWatchlists] = useState([]);
     const [showAddWatchlistPopup, setShowAddPopup] = useState(false);
 
     async function fetchWatchlists() {
-        const data = await getWatchlists(); // assume this returns JSON
+        const data = await getWatchlists(userID); // assume this returns JSON
         setWatchlists(data);
     }
 
@@ -38,13 +39,22 @@ export default function App() {
     }, []); // empty array → runs only once on page refresh
 
     const addNewWatchlist = (WatchlistName, newAlerts) => {
-        var newWatchlistData = {
-            "name": WatchlistName,
-            "alerts": newAlerts
+        var newWatchlistDataJson = {
+            "userID": userID,
+            "watchlistData": {
+                "name": WatchlistName,
+                "alerts": newAlerts
+            }
         }
-
-        createWatchlist(newWatchlistData)
+        createWatchlist(newWatchlistDataJson)
         setShowAddPopup(false)
+    }
+
+    const delWatchlist = (watchlistID) => {
+        var deleteWLJson = {
+            "ID": watchlistID
+        }
+        deleteWatchlist(deleteWLJson)
     }
 
     return (
@@ -65,6 +75,7 @@ export default function App() {
             <WatchlistGrid
                 watchlists={watchlists}
                 onAdd={()=>setShowAddPopup(true)}
+                onDelete={delWatchlist}
             />
         </>
     );

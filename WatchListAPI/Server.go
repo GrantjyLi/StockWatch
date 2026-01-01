@@ -38,6 +38,7 @@ func main() {
 	mux.Handle("/Health", enableCORS(http.HandlerFunc(Health)))
 	mux.Handle("/CreateWatchlist", enableCORS(http.HandlerFunc(CreateWatchlist)))
 	mux.Handle("/GetWatchlists", enableCORS(http.HandlerFunc(GetWatchlists)))
+	mux.Handle("/DeleteWatchlist", enableCORS(http.HandlerFunc(DeleteWatchlists)))
 
 	log.Println("Server running on :8080")
 	log.Fatal(http.ListenAndServe(":8080", mux))

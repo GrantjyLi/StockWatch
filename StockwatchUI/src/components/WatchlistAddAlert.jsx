@@ -15,7 +15,7 @@ export default function WatchlistAddAlert ({ alertData, onChange, onRemove }) {
             <option value="=">=</option>
         </select>
         <input style={styles.input} placeholder="Price" type="number" step="any" min="0" name="amount"
-            onChange={(e) => onChange({ ...alertData, price: e.target.value })}
+            onChange={(e) => onChange({ ...alertData, price: parseFloat(e.target.value) })}
         />
         <button style={styles.removeX} onClick={onRemove}>✕</button>
     </div>

@@ -14,10 +14,9 @@ import (
 
 const ENV_FILE = "WatchListAPI.env"
 
-// TODO: change this later
-var userID = "eb0dcdff-741d-437c-ad64-35b267a91494"
-
-//var userID = "b573d9e3-5f72-47a4-bc4f-2a882fccb3bb"
+// test users:
+// eb0dcdff-741d-437c-ad64-35b267a91494
+// b573d9e3-5f72-47a4-bc4f-2a882fccb3bb
 
 func DB_connect() *sql.DB {
 	err := godotenv.Load(ENV_FILE)
@@ -48,24 +47,23 @@ func DB_connect() *sql.DB {
 	return db
 }
 
-func DB_writeWatchlist(watchlistData Watchlist) {
+func DB_writeWatchlist(userID string, watchlistData Watchlist) (bool, error) {
 	tx, err := database.Begin()
+
 	if err != nil {
-		log.Fatal(err)
+		return false, err
 	}
+
 	defer tx.Rollback() // safe rollback if commit never happens
 
 	watchlistID := uuid.New().String()
 
-	watchlistQuery := fmt.Sprintf("INSERT INTO watchlists (id, user_id, name)\nVALUES ('%s', '%s', '%s');",
-		watchlistID,
-		userID,
-		watchlistData.Name,
+	_, err = tx.Exec(
+		"INSERT INTO watchlists (id, user_id, name) VALUES ($1, $2, $3)",
+		watchlistID, userID, watchlistData.Name,
 	)
-
-	_, err = tx.Exec(watchlistQuery)
 	if err != nil {
-		log.Fatal(err)
+		return false, err
 	}
 
 	alertsQuery := "INSERT INTO alerts (id, watchlist_id, ticker, operator, target_price)\nValues"
@@ -87,15 +85,41 @@ func DB_writeWatchlist(watchlistData Watchlist) {
 
 	_, err = tx.Exec(alertsQuery)
 	if err != nil {
-		log.Fatal(err)
+		return false, err
 	}
 
 	if err := tx.Commit(); err != nil {
-		log.Fatal(err)
+		return false, err
 	}
+	return true, nil
 }
 
-func DB_getWatchlists(userData GetWatchlistsRequest) (map[string]*Watchlist, error) {
+func DB_deleteWatchlist(watchlistData DeleteWatchlistsRequest_t) (bool, error) {
+	tx, err := database.Begin()
+	if err != nil {
+		return false, err
+	}
+	defer tx.Rollback()
+
+	_, err = tx.Exec("DELETE FROM alerts WHERE watchlist_id = $1", watchlistData.ID)
+	if err != nil {
+		return false, err
+	}
+
+	_, err = tx.Exec("DELETE FROM watchlists WHERE id = $1", watchlistData.ID)
+	if err != nil {
+		return false, err
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return false, err
+	}
+	fmt.Printf("watchlist Deleted %s\n", watchlistData.ID)
+	return true, nil
+}
+
+func DB_getWatchlists(userData GetWatchlistsRequest_t) (map[string]*Watchlist, error) {
 	rows, err := database.Query(
 		`SELECT watchlists.name, watchlists.id, alerts.id, alerts.ticker, alerts.operator, alerts.target_price
 		FROM watchlists JOIN alerts

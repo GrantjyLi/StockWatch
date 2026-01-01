@@ -5,6 +5,10 @@ import (
 	"net/http"
 )
 
+type CreateWatchlistRequest struct {
+	UserID        string    `json:"userID"`
+	WatchlistData Watchlist `json:"watchlistData"`
+}
 type Watchlist struct {
 	ID     string
 	Name   string   `json:"name"`
@@ -17,7 +21,11 @@ type Alert struct {
 	Price    float32 `json:"price"`
 }
 
-type GetWatchlistsRequest struct {
+type GetWatchlistsRequest_t struct {
+	ID string `json:"ID"`
+}
+
+type DeleteWatchlistsRequest_t struct {
 	ID string `json:"ID"`
 }
 
@@ -38,15 +46,14 @@ func CreateWatchlist(w http.ResponseWriter, r *http.Request) {
 	if checkMethod(w, r) == false {
 		return
 	}
-
-	var req Watchlist
+	var req CreateWatchlistRequest
 	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
 		http.Error(w, "Invalid JSON", http.StatusBadRequest)
 		return
 	}
 
-	DB_writeWatchlist(req)
+	DB_writeWatchlist(req.UserID, req.WatchlistData)
 
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(map[string]string{
@@ -54,12 +61,27 @@ func CreateWatchlist(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+func DeleteWatchlists(w http.ResponseWriter, r *http.Request) {
+	if checkMethod(w, r) == false {
+		return
+	}
+
+	var req DeleteWatchlistsRequest_t
+	err := json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		http.Error(w, "Invalid JSON", http.StatusBadRequest)
+		return
+	}
+
+	DB_deleteWatchlist(req)
+}
+
 func GetWatchlists(w http.ResponseWriter, r *http.Request) {
 	if checkMethod(w, r) == false {
 		return
 	}
 
-	var req GetWatchlistsRequest
+	var req GetWatchlistsRequest_t
 	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
 		http.Error(w, "Invalid JSON", http.StatusBadRequest)

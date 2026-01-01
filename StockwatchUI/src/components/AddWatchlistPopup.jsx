@@ -7,7 +7,7 @@ export default function AddWatchlistPopup({ addNewWatchlist, onClose }) {
     const [newAlerts, setNewAlerts] = useState([]);
 
     const addRow = () => {
-        setNewAlerts([...newAlerts, { ticker: "", operator: ">=", price: "" }]);
+        setNewAlerts([...newAlerts, { ticker: "", operator: ">=", price: 0 }]);
     };
 
     const removeRow = (index) => {
