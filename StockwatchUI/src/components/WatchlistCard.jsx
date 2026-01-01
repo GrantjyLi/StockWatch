@@ -1,23 +1,23 @@
 import React from "react";
 
 export default function WatchlistCard({ WID, watchlistData }) {
-    const tickers = watchlistData.tickers
-
+    const alerts = watchlistData.alerts
+    console.log(alerts)
     return (
         <div style={styles.card}>
             <h3>{watchlistData.name}</h3>
-            <small>{tickers.length} Items</small>
+            <small>{alerts.length} Items</small>
 
             <div style={styles.items}>
-            {Object.entries(tickers).map(([ticker, condition]) => (
-                <div key={WID} style={styles.item}>
+            {Object.entries(alerts).map(([alertID, ticker, operator, price]) => (
+                <div key={alertID} style={styles.item}>
                 <span>{ticker}</span>
                 <span>
-                    {condition}
+                    {operator}{price}
                 </span>
                 </div>
             ))}
-            {tickers.length === 0 && <span>…</span>}
+            {alerts.length === 0 && <span>…</span>}
             </div>
         </div>
     );

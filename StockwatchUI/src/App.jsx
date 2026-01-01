@@ -40,10 +40,7 @@ export default function App() {
     const addNewWatchlist = (WatchlistName, newAlerts) => {
         var newWatchlistData = {
             "name": WatchlistName,
-            "tickers": {}
-        }
-        for (const alert of newAlerts){
-            newWatchlistData["tickers"][alert["ticker"]] = `${alert["operator"]} ${alert["price"]}`
+            "alerts": newAlerts
         }
 
         createWatchlist(newWatchlistData)

@@ -7,7 +7,7 @@ export default function WatchlistAddAlert ({ alertData, onChange, onRemove }) {
         <input style={styles.input} placeholder="Ticker"
             onChange={(e) => onChange({ ...alertData, ticker: e.target.value })}
         />
-        <select style={styles.input} name="cars" id="cars"
+        <select style={styles.input}
             onChange={(e) => onChange({ ...alertData, operator: e.target.value })}
         >
             <option value=">=">&gt;=</option>

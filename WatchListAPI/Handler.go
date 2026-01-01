@@ -6,28 +6,20 @@ import (
 )
 
 type Watchlist struct {
-	Name    string            `json:"name"`
-	Tickers map[string]string `json:"tickers"`
+	ID     string
+	Name   string   `json:"name"`
+	Alerts []*Alert `json:"alerts"`
+}
+type Alert struct {
+	ID       string
+	Ticker   string  `json:"ticker"`
+	Operator string  `json:"operator"`
+	Price    float32 `json:"price"`
 }
 
-/*
-	{
-		"name": "watchlist-name",
-		"tickers": {
-			"AAPL":">= 150",
-			"MSFT":"<= 300"
-		}
-	}
-*/
 type GetWatchlistsRequest struct {
 	ID string `json:"ID"`
 }
-
-/*
-{
-	"ID": "user-UUID",
-}
-*/
 
 func checkMethod(w http.ResponseWriter, r *http.Request) bool {
 	if r.Method != http.MethodPost {

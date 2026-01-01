@@ -70,24 +70,20 @@ func DB_writeWatchlist(watchlistData Watchlist) {
 
 	alertsQuery := "INSERT INTO alerts (id, watchlist_id, ticker, operator, target_price)\nValues"
 	rows := []string{}
-	for ticker, alert := range watchlistData.Tickers {
-		parts := strings.SplitN(alert, " ", 2)
-		inequality := parts[0]
-		price := parts[1]
+	for _, alert := range watchlistData.Alerts {
 
-		row := fmt.Sprintf("('%s', '%s', '%s', '%s', %s)",
+		row := fmt.Sprintf("('%s', '%s', '%s', '%s', %.2f)",
 			uuid.New().String(),
 			watchlistID,
-			ticker,
-			inequality,
-			price,
+			alert.Ticker,
+			alert.Operator,
+			alert.Price,
 		)
 
 		rows = append(rows, row)
 	}
 
 	alertsQuery += strings.Join(rows, ",\n")
-	fmt.Println(alertsQuery)
 
 	_, err = tx.Exec(alertsQuery)
 	if err != nil {
@@ -101,7 +97,7 @@ func DB_writeWatchlist(watchlistData Watchlist) {
 
 func DB_getWatchlists(userData GetWatchlistsRequest) (map[string]*Watchlist, error) {
 	rows, err := database.Query(
-		`SELECT watchlists.name, watchlists.id, alerts.ticker, alerts.operator, alerts.target_price
+		`SELECT watchlists.name, watchlists.id, alerts.id, alerts.ticker, alerts.operator, alerts.target_price
 		FROM watchlists JOIN alerts
 		ON alerts.watchlist_id = watchlists.id
 		WHERE watchlists.user_id = $1;`,
@@ -114,11 +110,11 @@ func DB_getWatchlists(userData GetWatchlistsRequest) (map[string]*Watchlist, err
 	defer rows.Close()
 
 	watchlists := make(map[string]*Watchlist)
-	var watchlistName, watchlistID, ticker, operator string
-	var targetPrice float64
+	var watchlistName, watchlistID, alertID, ticker, operator string
+	var targetPrice float32
 
 	for rows.Next() {
-		if err := rows.Scan(&watchlistName, &watchlistID, &ticker, &operator, &targetPrice); err != nil {
+		if err := rows.Scan(&watchlistName, &watchlistID, &alertID, &ticker, &operator, &targetPrice); err != nil {
 			log.Fatal(err)
 		}
 
@@ -126,14 +122,19 @@ func DB_getWatchlists(userData GetWatchlistsRequest) (map[string]*Watchlist, err
 		WL, exists := watchlists[watchlistID]
 		if !exists {
 			WL = &Watchlist{
-				Name:    watchlistName,
-				Tickers: make(map[string]string),
+				ID:   watchlistID,
+				Name: watchlistName,
 			}
 			watchlists[watchlistID] = WL
 		}
 
 		// Add alert to the watchlist
-		WL.Tickers[ticker] = fmt.Sprintf("%s %.2f", operator, targetPrice)
+		WL.Alerts = append(WL.Alerts, &Alert{
+			ID:       alertID,
+			Ticker:   ticker,
+			Operator: operator,
+			Price:    targetPrice,
+		})
 	}
 
 	// for id, watchlist := range watchlists {
