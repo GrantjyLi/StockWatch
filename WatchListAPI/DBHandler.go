@@ -12,8 +12,6 @@ import (
 	"github.com/joho/godotenv"
 )
 
-const ENV_FILE = "WatchListAPI.env"
-
 // test users:
 // eb0dcdff-741d-437c-ad64-35b267a91494
 // b573d9e3-5f72-47a4-bc4f-2a882fccb3bb
@@ -47,11 +45,11 @@ func DB_connect() *sql.DB {
 	return db
 }
 
-func DB_writeWatchlist(userID string, watchlistData Watchlist) (bool, error) {
+func DB_writeWatchlist(userID string, watchlistData Watchlist) error {
 	tx, err := database.Begin()
 
 	if err != nil {
-		return false, err
+		return err
 	}
 
 	defer tx.Rollback() // safe rollback if commit never happens
@@ -63,7 +61,7 @@ func DB_writeWatchlist(userID string, watchlistData Watchlist) (bool, error) {
 		watchlistID, userID, watchlistData.Name,
 	)
 	if err != nil {
-		return false, err
+		return err
 	}
 
 	alertsQuery := "INSERT INTO alerts (id, watchlist_id, ticker, operator, target_price)\nValues"
@@ -85,38 +83,37 @@ func DB_writeWatchlist(userID string, watchlistData Watchlist) (bool, error) {
 
 	_, err = tx.Exec(alertsQuery)
 	if err != nil {
-		return false, err
+		return err
 	}
 
 	if err := tx.Commit(); err != nil {
-		return false, err
+		return err
 	}
-	return true, nil
+	return nil
 }
 
-func DB_deleteWatchlist(watchlistData DeleteWatchlistsRequest_t) (bool, error) {
+func DB_deleteWatchlist(watchlistData DeleteWatchlistsRequest_t) error {
 	tx, err := database.Begin()
 	if err != nil {
-		return false, err
+		return err
 	}
 	defer tx.Rollback()
 
 	_, err = tx.Exec("DELETE FROM alerts WHERE watchlist_id = $1", watchlistData.ID)
 	if err != nil {
-		return false, err
+		return err
 	}
 
 	_, err = tx.Exec("DELETE FROM watchlists WHERE id = $1", watchlistData.ID)
 	if err != nil {
-		return false, err
+		return err
 	}
 
 	err = tx.Commit()
 	if err != nil {
-		return false, err
+		return err
 	}
-	fmt.Printf("watchlist Deleted %s\n", watchlistData.ID)
-	return true, nil
+	return nil
 }
 
 func DB_getWatchlists(userData GetWatchlistsRequest_t) (map[string]*Watchlist, error) {
@@ -129,7 +126,7 @@ func DB_getWatchlists(userData GetWatchlistsRequest_t) (map[string]*Watchlist, e
 	)
 
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 	defer rows.Close()
 
@@ -139,7 +136,7 @@ func DB_getWatchlists(userData GetWatchlistsRequest_t) (map[string]*Watchlist, e
 
 	for rows.Next() {
 		if err := rows.Scan(&watchlistName, &watchlistID, &alertID, &ticker, &operator, &targetPrice); err != nil {
-			log.Fatal(err)
+			return nil, err
 		}
 
 		// Create watchlist entry if not exists
@@ -160,14 +157,6 @@ func DB_getWatchlists(userData GetWatchlistsRequest_t) (map[string]*Watchlist, e
 			Price:    targetPrice,
 		})
 	}
-
-	// for id, watchlist := range watchlists {
-	// 	fmt.Printf("%s:\n", id)
-	// 	fmt.Printf("    %s\n", watchlist.Name)
-	// 	for ticker, condition := range watchlist.Tickers {
-	// 		fmt.Printf("    %s:%s\n", ticker, condition)
-	// 	}
-	// }
 
 	return watchlists, nil
 }

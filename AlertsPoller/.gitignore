@@ -1,0 +1,4 @@
+AlertsPoller.env
+AlertsPoller.go.exe
+go.mod
+go.sum

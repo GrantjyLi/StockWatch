@@ -53,8 +53,11 @@ func CreateWatchlist(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	DB_writeWatchlist(req.UserID, req.WatchlistData)
-
+	err = DB_writeWatchlist(req.UserID, req.WatchlistData)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(map[string]string{
 		"status": "watchlist created",
@@ -73,7 +76,16 @@ func DeleteWatchlists(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	DB_deleteWatchlist(req)
+	err = DB_deleteWatchlist(req)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(map[string]string{
+		"status": "watchlist deleted",
+	})
 }
 
 func GetWatchlists(w http.ResponseWriter, r *http.Request) {

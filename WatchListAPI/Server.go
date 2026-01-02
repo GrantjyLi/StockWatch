@@ -6,6 +6,8 @@ import (
 	"net/http"
 )
 
+const ENV_FILE = "WatchListAPI.env"
+
 // API create watchlist test
 // curl -Method POST "http://localhost:8080/CreateWatchlist" -Headers @{ "Content-Type" = "application/json" } -Body '{"name":"newListTest","alerts":[{"ticker": "VOO", "condition": "<=", "price": 50}, {"ticker": "VFV", "condition": ">=", "price": 1150}]}'
 // API get watchlist test
