@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	_ "github.com/jackc/pgx/v5/stdlib"
-	"github.com/joho/godotenv"
 )
 
 type Alert struct {
@@ -20,10 +19,6 @@ var conditions = []string{
 }
 
 func DB_connect() *sql.DB {
-	err := godotenv.Load(ENV_FILE)
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
 
 	DB_USER := os.Getenv("DATABASE_USER")
 	DB_PW := os.Getenv("DATABASE_PASSWORD")
@@ -42,7 +37,6 @@ func DB_connect() *sql.DB {
 	// ping to verify that the database connection is alive/establishable
 	pingErr := db.Ping()
 	if pingErr != nil {
-		// log.Fatal prints the error and then calls os.Exit(1).
 		log.Fatal(pingErr)
 	}
 	return db
