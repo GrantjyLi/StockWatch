@@ -2,8 +2,9 @@ package main
 
 import (
 	"database/sql"
-	"fmt"
+	// "fmt"
 	"log"
+	"os"
 
 	"github.com/joho/godotenv"
 )
@@ -11,6 +12,7 @@ import (
 const ENV_FILE = "AlertsPoller.env"
 
 var database *sql.DB
+var FINNHUB_API_KEY string
 
 func main() {
 	err := godotenv.Load(ENV_FILE)
@@ -18,13 +20,21 @@ func main() {
 		log.Fatal("Error loading .env file")
 	}
 
-	database = DB_connect()
-	defer database.Close()
-	allAlerts, err := DB_getAlerts()
+	// database = DB_connect()
+	// defer database.Close()
+	// allAlerts, err := DB_getAlerts()
 
-	if err != nil {
-		fmt.Println("error getting alerts")
+	symbols := []string{
+		"AAPL",
+		"MSFT",
+		"AMZN",
+		"GOOGL",
 	}
 
-	getTickerPrices(allAlerts)
+	FINNHUB_API_KEY = os.Getenv("FINNHUB_API_KEY")
+	initRedis()
+
+	bootstrapPrices(symbols)
+
+	startWebSocket(symbols)
 }
