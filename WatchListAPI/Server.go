@@ -4,6 +4,9 @@ import (
 	"database/sql"
 	"log"
 	"net/http"
+	"os"
+
+	"github.com/joho/godotenv"
 )
 
 const ENV_FILE = "WatchListAPI.env"
@@ -17,7 +20,7 @@ var database *sql.DB
 func enableCORS(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Allow your frontend origin
-		w.Header().Set("Access-Control-Allow-Origin", "http://localhost:5173")
+		w.Header().Set("Access-Control-Allow-Origin", os.Getenv("WEB_CLIENT_ADDRESS"))
 		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS")
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 
@@ -32,6 +35,11 @@ func enableCORS(next http.Handler) http.Handler {
 }
 
 func main() {
+	err := godotenv.Load(ENV_FILE)
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+
 	database = DB_connect()
 	defer database.Close()
 

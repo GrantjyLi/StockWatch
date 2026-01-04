@@ -20,21 +20,20 @@ func main() {
 		log.Fatal("Error loading .env file")
 	}
 
-	// database = DB_connect()
-	// defer database.Close()
-	// allAlerts, err := DB_getAlerts()
+	database = DB_connect()
+	defer database.Close()
+	allAlerts, err := DB_getAlerts()
 
-	symbols := []string{
-		"AAPL",
-		"MSFT",
-		"AMZN",
-		"GOOGL",
-	}
+	// symbols := []string{
+	// 	"AAPL",
+	// 	"MSFT",
+	// 	"AMZN",
+	// 	"GOOG",
+	// }
 
 	FINNHUB_API_KEY = os.Getenv("FINNHUB_API_KEY")
 	initRedis()
 
-	bootstrapPrices(symbols)
-
-	startWebSocket(symbols)
+	bootstrapPrices(allAlerts)
+	// getPriceUpdates(symbols)
 }

@@ -8,8 +8,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/go-redis/redis/v8"
 	"github.com/gorilla/websocket"
+	"github.com/redis/go-redis/v9"
 )
 
 type PriceCache struct {
@@ -19,6 +19,8 @@ type PriceCache struct {
 
 type QuoteResponse struct {
 	Current float32 `json:"c"`
+	High    float32 `json:"h"`
+	Low     float32 `json:"l"`
 }
 
 type TradeMsg struct {
@@ -32,10 +34,10 @@ type TickerData struct {
 }
 
 const (
-	finnhubREST     = "https://finnhub.io/api/v1/quote"
-	FINNHUB_WS      = "wss://ws.finnhub.io?token="
-	REDIS_ADDR      = "localhost:6379"
-	FINNHUB_RATE_HZ = 30
+	FINNHUB_QOUTE_EP = "https://finnhub.io/api/v1/quote"
+	FINNHUB_WS       = "wss://ws.finnhub.io?token="
+	REDIS_ADDR       = "localhost:6379"
+	FINNHUB_RATE_HZ  = 30
 )
 
 var (
@@ -51,30 +53,32 @@ func initRedis() {
 	})
 }
 
-func storePrice(symbol string, price float32) {
+func storePrice(symbol string, qoute QuoteResponse) {
 	data, _ := json.Marshal(PriceCache{
-		Price: price,
+		Price: qoute.Current,
 		TS:    time.Now().Unix(),
 	})
 
-	err := rdb.Set(ctx, "price:"+symbol, data, 0).Err()
+	err := rdb.Set(ctx, symbol, data, 0).Err()
 	if err != nil {
 		log.Println("Redis error:", err)
 	}
+
+	val, err := rdb.Get(ctx, symbol).Result()
+	if err != nil {
+		log.Println("Redis error:", err)
+	}
+	fmt.Printf("Value from redis: %s\n", val)
 }
 
 /* REST init ============================ */
 
-func fetchInitialPrice(symbol string) {
-	req, _ := http.NewRequest("GET", finnhubREST, nil)
-	q := req.URL.Query()
-	q.Add("symbol", symbol)
-	q.Add("token", FINNHUB_API_KEY)
-	req.URL.RawQuery = q.Encode()
+func fetchInitialPrice(ticker string) {
+	url := fmt.Sprintf("%s?symbol=%s&token=%s", FINNHUB_QOUTE_EP, ticker, FINNHUB_API_KEY)
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := http.Get(url)
 	if err != nil {
-		log.Println("REST error:", err)
+		log.Println("Decode error:", err)
 		return
 	}
 	defer resp.Body.Close()
@@ -86,54 +90,50 @@ func fetchInitialPrice(symbol string) {
 		return
 	}
 
+	fmt.Printf("%s: $%.2f\n", ticker, quote.Current)
 	if quote.Current > 0 {
-		storePrice(symbol, quote.Current)
+		storePrice(ticker, quote)
 	}
 }
 
 /* Rate limit init ============================ */
 
-func bootstrapPrices(symbols []string) {
-	ticker := time.NewTicker(time.Second / FINNHUB_RATE_HZ)
-	defer ticker.Stop()
+func bootstrapPrices(alerts []*Alert) {
+	timeTicker := time.NewTicker(time.Second / FINNHUB_RATE_HZ)
+	defer timeTicker.Stop()
 
-	for _, symbol := range symbols {
-		<-ticker.C
-		go fetchInitialPrice(symbol)
+	for _, alert := range alerts {
+		<-timeTicker.C
+		fetchInitialPrice(alert.ticker)
 	}
 }
 
 /* web socket streaming ============================ */
 
-func startWebSocket(symbols []string) {
-	fmt.Println(FINNHUB_WS + FINNHUB_API_KEY)
-	ws, _, err := websocket.DefaultDialer.Dial(
-		FINNHUB_WS+FINNHUB_API_KEY, nil,
-	)
+func getPriceUpdates(symbols []string) {
+
+	ws, _, err := websocket.DefaultDialer.Dial(FINNHUB_WS+FINNHUB_API_KEY, nil)
 	if err != nil {
-		log.Fatal("WS error:", err)
+		panic(err)
 	}
 	defer ws.Close()
 
-	// Subscribe
 	for _, s := range symbols {
-		msg := map[string]string{
-			"type":   "subscribe",
-			"symbol": s,
-		}
-		ws.WriteJSON(msg)
+		msg, _ := json.Marshal(map[string]interface{}{"type": "subscribe", "symbol": s})
+		ws.WriteMessage(websocket.TextMessage, msg)
 	}
-
 	for {
 		var msg TradeMsg
-		if err := ws.ReadJSON(&msg); err != nil {
+		err := ws.ReadJSON(&msg)
+		if err != nil {
 			log.Fatal("WS read error:", err)
 		}
+		fmt.Println("Message from server ", msg)
 
-		if msg.Type == "trade" {
-			for _, trade := range msg.Data {
-				storePrice(trade.Symbol, trade.Price)
-			}
-		}
+		// if msg.Type == "trade" {
+		// 	for _, trade := range msg.Data {
+		// 		storePrice(trade.Symbol, trade.Price)
+		// 	}
+		// }
 	}
 }

@@ -9,7 +9,6 @@ import (
 
 	"github.com/google/uuid"
 	_ "github.com/jackc/pgx/v5/stdlib"
-	"github.com/joho/godotenv"
 )
 
 // test users:
@@ -17,10 +16,6 @@ import (
 // b573d9e3-5f72-47a4-bc4f-2a882fccb3bb
 
 func DB_connect() *sql.DB {
-	err := godotenv.Load(ENV_FILE)
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
 
 	DB_USER := os.Getenv("DATABASE_USER")
 	DB_PW := os.Getenv("DATABASE_PASSWORD")
