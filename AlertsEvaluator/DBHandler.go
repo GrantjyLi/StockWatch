@@ -39,7 +39,8 @@ func DB_connect() *sql.DB {
 }
 
 func DB_getAlertData(update *PriceUpdate) ([]*Triggered_Alert, error) {
-	alertMatchQuery := fmt.Sprintf(`
+
+	rows, err := database.Query(`
 		SELECT 
 			a.id AS alert_id,
 			u.email
@@ -56,8 +57,6 @@ func DB_getAlertData(update *PriceUpdate) ([]*Triggered_Alert, error) {
 		update.Ticker,
 		update.Price,
 	)
-
-	rows, err := database.Query(alertMatchQuery)
 	if err != nil {
 		return nil, err
 	}
