@@ -1,0 +1,9 @@
+API that serves requests from StockWatch client UI
+
+Responsibilities:
+- takes requests from StockWatch client UI
+- fetches data from database
+- serves back to client
+
+Run locally: go run .
+Run Docker container: docker run -p 8080:8080 watchlistapi

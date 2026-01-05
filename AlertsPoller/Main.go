@@ -24,6 +24,8 @@ func main() {
 	defer database.Close()
 	allAlerts, err := DB_getAlerts()
 
+	RMQ_connect()
+
 	// symbols := []string{
 	// 	"AAPL",
 	// 	"MSFT",
@@ -36,4 +38,5 @@ func main() {
 
 	bootstrapPrices(allAlerts)
 	// getPriceUpdates(symbols)
+	RMQ_close()
 }

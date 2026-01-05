@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -29,7 +30,7 @@ type TradeMsg struct {
 }
 
 type TickerData struct {
-	Symbol string  `json:"s"`
+	Ticker string  `json:"s"`
 	Price  float32 `json:"p"`
 }
 
@@ -53,9 +54,9 @@ func initRedis() {
 	})
 }
 
-func storePrice(symbol string, qoute QuoteResponse) {
+func storePrice(symbol string, price float32) {
 	data, _ := json.Marshal(PriceCache{
-		Price: qoute.Current,
+		Price: price,
 		TS:    time.Now().Unix(),
 	})
 
@@ -73,7 +74,8 @@ func storePrice(symbol string, qoute QuoteResponse) {
 
 /* REST init ============================ */
 
-func fetchInitialPrice(ticker string) {
+func fetchInitialPrice(alert *Alert) {
+	ticker := alert.ticker
 	url := fmt.Sprintf("%s?symbol=%s&token=%s", FINNHUB_QOUTE_EP, ticker, FINNHUB_API_KEY)
 
 	resp, err := http.Get(url)
@@ -90,22 +92,36 @@ func fetchInitialPrice(ticker string) {
 		return
 	}
 
-	fmt.Printf("%s: $%.2f\n", ticker, quote.Current)
 	if quote.Current > 0 {
-		storePrice(ticker, quote)
+		storePrice(ticker, quote.Current)
+		publishNewPrice(&TickerData{
+			Ticker: ticker,
+			Price:  quote.Current,
+		})
 	}
 }
 
 /* Rate limit init ============================ */
 
 func bootstrapPrices(alerts []*Alert) {
+	var initPrices_WG sync.WaitGroup
+
 	timeTicker := time.NewTicker(time.Second / FINNHUB_RATE_HZ)
 	defer timeTicker.Stop()
 
 	for _, alert := range alerts {
 		<-timeTicker.C
-		fetchInitialPrice(alert.ticker)
+
+		initPrices_WG.Add(1)
+		go fetchInitialPrice(alert)
+
+		go func(a *Alert) {
+			defer initPrices_WG.Done()
+			fetchInitialPrice(a)
+		}(alert)
 	}
+
+	initPrices_WG.Wait()
 }
 
 /* web socket streaming ============================ */
@@ -130,10 +146,11 @@ func getPriceUpdates(symbols []string) {
 		}
 		fmt.Println("Message from server ", msg)
 
-		// if msg.Type == "trade" {
-		// 	for _, trade := range msg.Data {
-		// 		storePrice(trade.Symbol, trade.Price)
-		// 	}
-		// }
+		if msg.Type == "trade" {
+			for _, trade := range msg.Data {
+				storePrice(trade.Ticker, trade.Price)
+				publishNewPrice(&trade)
+			}
+		}
 	}
 }
