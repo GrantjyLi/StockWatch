@@ -9,6 +9,7 @@ import (
 	"github.com/joho/godotenv"
 )
 
+// todo: investigate multiple queries for 1 ticker
 const ENV_FILE = "AlertsPoller.env"
 
 var database *sql.DB
@@ -30,6 +31,6 @@ func main() {
 	initRedis()
 
 	bootstrapPrices(allAlerts)
-	// getPriceUpdates(symbols)
+	getPriceUpdates(allAlerts)
 	RMQ_close()
 }

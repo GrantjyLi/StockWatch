@@ -120,7 +120,7 @@ func bootstrapPrices(alerts []*Alert) {
 
 /* web socket streaming ============================ */
 
-func getPriceUpdates(symbols []string) {
+func getPriceUpdates(alerts []*Alert) {
 
 	ws, _, err := websocket.DefaultDialer.Dial(FINNHUB_WS+FINNHUB_API_KEY, nil)
 	if err != nil {
@@ -128,8 +128,8 @@ func getPriceUpdates(symbols []string) {
 	}
 	defer ws.Close()
 
-	for _, s := range symbols {
-		msg, _ := json.Marshal(map[string]interface{}{"type": "subscribe", "symbol": s})
+	for _, alert := range alerts {
+		msg, _ := json.Marshal(map[string]interface{}{"type": "subscribe", "symbol": alert.ticker})
 		ws.WriteMessage(websocket.TextMessage, msg)
 	}
 	for {
