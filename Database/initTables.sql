@@ -33,3 +33,8 @@ CREATE INDEX index_alerts_poller_main ON alerts (
     triggered,
     created_at
 );
+CREATE INDEX index_alerts_price_match ON alerts (
+    ticker, 
+    triggered, 
+    target_price
+);

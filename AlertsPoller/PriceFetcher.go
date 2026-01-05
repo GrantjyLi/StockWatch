@@ -64,12 +64,6 @@ func storePrice(symbol string, price float32) {
 	if err != nil {
 		log.Println("Redis error:", err)
 	}
-
-	val, err := rdb.Get(ctx, symbol).Result()
-	if err != nil {
-		log.Println("Redis error:", err)
-	}
-	fmt.Printf("Value from redis: %s\n", val)
 }
 
 /* REST init ============================ */

@@ -11,7 +11,8 @@ import (
 
 const (
 	RMQ_EX_NAME     = "new_prices"
-	RMQ_EX_KIND     = "direct"
+	RMQ_EX_KIND     = "topic"
+	RMQ_EX_TOPIC    = "stocks"
 	RMQ_EX_DURABLE  = true
 	RMQ_EX_AUTODEL  = false
 	RMQ_EX_INTERNAL = false
@@ -23,7 +24,7 @@ var (
 	RMQ_CHANN *amqp.Channel
 )
 
-func RMQ_connect() {
+func RMQ_setup() {
 	RMQ_address := fmt.Sprintf(
 		"amqp://%s:%s@%s/",
 		os.Getenv("RMQ_UN"),
@@ -64,9 +65,11 @@ func RMQ_close() {
 func publishNewPrice(newUpdate *TickerData) error {
 	tickerData, _ := json.Marshal(newUpdate)
 
+	fmt.Println("publishing price :" + newUpdate.Ticker)
+
 	return RMQ_CHANN.Publish(
 		RMQ_EX_NAME,
-		newUpdate.Ticker,
+		(RMQ_EX_TOPIC + "." + newUpdate.Ticker),
 		false,
 		false,
 		amqp.Publishing{

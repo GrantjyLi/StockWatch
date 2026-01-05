@@ -5,17 +5,13 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"strings"
 
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
-type Alert struct {
-	ticker string
-}
-
-var ALERT_CONDITIONS = []string{
-	fmt.Sprintf("alerts.triggered = %s", "FALSE"),
+type Triggered_Alert struct {
+	alert_ID   string
+	user_email string
 }
 
 func DB_connect() *sql.DB {
@@ -42,28 +38,41 @@ func DB_connect() *sql.DB {
 	return db
 }
 
-func DB_getAlerts() ([]*Alert, error) {
-	alertsQuery := "SELECT DISTINCT alerts.ticker FROM alerts"
+func DB_getAlertData(update *PriceUpdate) ([]*Triggered_Alert, error) {
+	alertMatchQuery := fmt.Sprintf(`
+		SELECT 
+			a.id AS alert_id,
+			u.email
+		FROM alerts a
+		JOIN watchlists w ON a.watchlist_id = w.id
+		JOIN users u ON w.user_id = u.id
+		WHERE a.ticker = $1
+		AND a.triggered = false
+		AND (
+			(a.operator = '>=' AND $2 >= a.target_price) OR
+			(a.operator = '<=' AND $2 <= a.target_price) OR
+			(a.operator = '='  AND $2 =  a.target_price)
+		);`,
+		update.Ticker,
+		update.Price,
+	)
 
-	if len(ALERT_CONDITIONS) > 0 {
-		alertsQuery += " WHERE " + strings.Join(ALERT_CONDITIONS, " AND ")
-	}
-
-	rows, err := database.Query(alertsQuery)
+	rows, err := database.Query(alertMatchQuery)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	var alerts []*Alert
-	var alertTicker string
+	var triggeredAlerts []*Triggered_Alert
+	var alertID, userEmail string
 
 	for rows.Next() {
-		if err := rows.Scan(&alertTicker); err != nil {
+		if err := rows.Scan(&alertID, &userEmail); err != nil {
 			return nil, err
 		}
-		alerts = append(alerts, &Alert{
-			ticker: alertTicker,
+		triggeredAlerts = append(triggeredAlerts, &Triggered_Alert{
+			alert_ID:   alertID,
+			user_email: userEmail,
 		})
 	}
 
@@ -71,5 +80,5 @@ func DB_getAlerts() ([]*Alert, error) {
 		return nil, err
 	}
 
-	return alerts, nil
+	return triggeredAlerts, nil
 }

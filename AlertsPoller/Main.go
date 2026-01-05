@@ -24,14 +24,7 @@ func main() {
 	defer database.Close()
 	allAlerts, err := DB_getAlerts()
 
-	RMQ_connect()
-
-	// symbols := []string{
-	// 	"AAPL",
-	// 	"MSFT",
-	// 	"AMZN",
-	// 	"GOOG",
-	// }
+	RMQ_setup()
 
 	FINNHUB_API_KEY = os.Getenv("FINNHUB_API_KEY")
 	initRedis()
