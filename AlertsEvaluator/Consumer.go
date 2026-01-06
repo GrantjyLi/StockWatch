@@ -105,8 +105,6 @@ func RMQ_close() {
 
 func receiveNewPrice() {
 
-	log.Println("Waiting for price updates...")
-
 	for msg := range RMQ_MSGS {
 		var update PriceUpdate
 		json.Unmarshal(msg.Body, &update)
