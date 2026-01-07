@@ -1,19 +1,41 @@
 import React from "react";
 
 import { useState, useEffect} from "react";
+import Login from "./components/Login";
 import Header from "./components/Header";
 import WatchlistGrid from "./components/WatchlistGrid";
 import AddWatchlistPopup from "./components/AddWatchlistPopup";
 import ErrorPopup from "./components/ErrorMSGPopup";
-import { checkHealth, getWatchlists, deleteWatchlist, createWatchlist } from "./APIInterface"
+import { checkHealth, login, getWatchlists, deleteWatchlist, createWatchlist } from "./APIInterface"
 
 export default function App() {
     const [serverStatus, setServerStatus] = useState(false);
     const [errorPopup, setErrorPopup] = useState(false);
     const [errorMessage, setErrorMessage] = useState("");
-    const [userID, setUserId] = useState("eb0dcdff-741d-437c-ad64-35b267a91494");
+    const [userEmail, setUserEmail] = useState(null);
+    const [userID, setUserId] = useState("");
     const [watchlists, setWatchlists] = useState([]);
     const [showAddWatchlistPopup, setShowAddPopup] = useState(false);
+
+    async function handleLogin(email) {
+        var login_userID = await login(email)
+        
+        if (login_userID){
+            localStorage.setItem("userID", login_userID.userID);
+
+            setUserEmail(email)
+            setUserId(login_userID.userID)
+        }else{
+            alert("Failed login for email: " + email)
+        }
+    };
+
+    const handleLogout = () => {
+        setUserEmail(null)
+        setUserId("")
+        localStorage.removeItem("userID");
+
+    }
 
     async function fetchWatchlists() {
         const data = await getWatchlists(userID); // assume this returns JSON
@@ -26,17 +48,27 @@ export default function App() {
         if (health === null) {
             setErrorPopup(true)
             setErrorMessage("Server is Down")
-            return; // stop here
+            return
         }
         
         console.log("Server Health Check:", health);
         setServerStatus(true)
         await fetchWatchlists();
     }
+    
+    useEffect(() => {
+        const savedUserID = localStorage.getItem("userID");
+
+        if (savedUserID) {
+            setUserId(savedUserID);
+        }
+    }, []);
 
     useEffect(() => {
-        init();
-    }, []); // empty array → runs only once on page refresh
+        if(userID){
+            init(); 
+        }
+    }, [userID]); // empty array → runs only once on page refresh
 
     const addNewWatchlist = (WatchlistName, newAlerts) => {
         var newWatchlistDataJson = {
@@ -57,9 +89,15 @@ export default function App() {
         deleteWatchlist(deleteWLJson)
     }
 
+    if (!userID) {
+        return <Login handleLogin={handleLogin} />;
+    }
+
     return (
-      <>
-          <Header />
+        <>
+            <Header 
+                handleLogout = {handleLogout}
+            />
             {errorPopup && (
                 <ErrorPopup 
                     message={errorMessage}

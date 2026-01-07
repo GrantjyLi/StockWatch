@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"strconv"
@@ -24,15 +25,16 @@ func main() {
 	SMTP_PORT, _ := strconv.Atoi(os.Getenv("SMTP_PORT"))
 
 	m := gomail.NewMessage()
-	m.SetHeader("From", EMAIL_ADDR, "StockWatch Alerts")
-	m.SetHeader("To", "gnt.jy.li@gmail.com")
+	m.SetHeader("From", EMAIL_ADDR)
+	m.SetHeader("To", "c4856a3835f4@maileroo-tester.com")
 	m.SetHeader("Subject", "Test email")
 	m.SetBody("text/plain", "This email was sent using Go.")
 
 	d := gomail.NewDialer(SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASSWORD)
-	d.SSL = true
+	// d.SSL = true
 
 	if err := d.DialAndSend(m); err != nil {
 		log.Fatal(err)
 	}
+	fmt.Println("Email Sent")
 }

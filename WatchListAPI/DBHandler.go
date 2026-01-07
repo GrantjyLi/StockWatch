@@ -40,7 +40,25 @@ func DB_connect() *sql.DB {
 	return db
 }
 
-func DB_writeWatchlist(userID string, watchlistData Watchlist) error {
+func DB_CheckLogin(loginRequest LoginRequest_t) (string, error) {
+	userEmail := loginRequest.Email
+	var userID string
+
+	err := database.QueryRow(
+		`select id from users where email = $1`,
+		userEmail,
+	).Scan(&userID)
+
+	if err == sql.ErrNoRows {
+		return "", nil
+	}
+	if err != nil {
+		return "", err
+	}
+	return userID, nil
+}
+
+func DB_writeWatchlist(createWatchlistReq CreateWatchlistRequest_t) error {
 	tx, err := database.Begin()
 
 	if err != nil {
@@ -50,6 +68,8 @@ func DB_writeWatchlist(userID string, watchlistData Watchlist) error {
 	defer tx.Rollback() // safe rollback if commit never happens
 
 	watchlistID := uuid.New().String()
+	userID := createWatchlistReq.UserID
+	watchlistData := createWatchlistReq.WatchlistData
 
 	_, err = tx.Exec(
 		"INSERT INTO watchlists (id, user_id, name) VALUES ($1, $2, $3)",

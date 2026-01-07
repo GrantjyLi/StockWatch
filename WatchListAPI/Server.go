@@ -47,6 +47,7 @@ func main() {
 	mux := http.NewServeMux()
 
 	mux.Handle("/Health", enableCORS(http.HandlerFunc(Health)))
+	mux.Handle("/LoginRequest", enableCORS(http.HandlerFunc(LoginRequest)))
 	mux.Handle("/CreateWatchlist", enableCORS(http.HandlerFunc(CreateWatchlist)))
 	mux.Handle("/GetWatchlists", enableCORS(http.HandlerFunc(GetWatchlists)))
 	mux.Handle("/DeleteWatchlist", enableCORS(http.HandlerFunc(DeleteWatchlists)))

@@ -5,7 +5,7 @@ import (
 	"net/http"
 )
 
-type CreateWatchlistRequest struct {
+type CreateWatchlistRequest_t struct {
 	UserID        string    `json:"userID"`
 	WatchlistData Watchlist `json:"watchlistData"`
 }
@@ -19,6 +19,10 @@ type Alert struct {
 	Ticker   string  `json:"ticker"`
 	Operator string  `json:"operator"`
 	Price    float32 `json:"price"`
+}
+
+type LoginRequest_t struct {
+	Email string `json:"email"`
 }
 
 type GetWatchlistsRequest_t struct {
@@ -42,18 +46,41 @@ func Health(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("ok"))
 }
 
-func CreateWatchlist(w http.ResponseWriter, r *http.Request) {
+func LoginRequest(w http.ResponseWriter, r *http.Request) {
 	if checkMethod(w, r) == false {
 		return
 	}
-	var req CreateWatchlistRequest
+
+	var req LoginRequest_t
 	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
 		http.Error(w, "Invalid JSON", http.StatusBadRequest)
 		return
 	}
 
-	err = DB_writeWatchlist(req.UserID, req.WatchlistData)
+	userID, err := DB_CheckLogin(req)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(map[string]string{
+		"userID": userID,
+	})
+}
+
+func CreateWatchlist(w http.ResponseWriter, r *http.Request) {
+	if checkMethod(w, r) == false {
+		return
+	}
+	var req CreateWatchlistRequest_t
+	err := json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		http.Error(w, "Invalid JSON", http.StatusBadRequest)
+		return
+	}
+
+	err = DB_writeWatchlist(req)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

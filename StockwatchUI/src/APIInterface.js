@@ -17,6 +17,20 @@ export async function checkHealth() {
   }
 }
 
+export async function login(email) {
+    try {
+        const response = await axios.post(
+            `${STOCKWATCH_API_URL}/LoginRequest`,
+            { email: email },
+            { headers: { "Content-Type": "application/json" } }
+        );
+        return response.data;
+    } catch (err) {
+        console.error("Health check failed:", err);
+        return null;
+    }
+}
+
 
 export async function getWatchlists(userID){
     try {
@@ -26,10 +40,10 @@ export async function getWatchlists(userID){
             { headers: { "Content-Type": "application/json" } }
         );
     
-        return response.data; // returns the data as a JS object
+        return response.data;
     }catch (error) {
         console.error(error);
-        return {}; // return empty object on error
+        return {};
     }
 }
 
