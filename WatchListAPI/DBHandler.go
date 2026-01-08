@@ -11,10 +11,6 @@ import (
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
-// test users:
-// eb0dcdff-741d-437c-ad64-35b267a91494
-// b573d9e3-5f72-47a4-bc4f-2a882fccb3bb
-
 func DB_connect() *sql.DB {
 
 	DB_USER := os.Getenv("DATABASE_USER")
