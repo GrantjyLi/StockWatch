@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"os"
 
@@ -24,17 +23,12 @@ var (
 	RMQ_CHANN *amqp.Channel
 )
 
-func RMQ_setup() {
-	RMQ_address := fmt.Sprintf(
-		"amqp://%s:%s@%s/",
-		os.Getenv("RMQ_UN"),
-		os.Getenv("RMQ_PW"),
-		os.Getenv("RMQ_ADDR"),
-	)
+func RMQ_setup() bool {
 	var err error
-	RMQ_CONN, err = amqp.Dial(RMQ_address)
+	RMQ_CONN, err = amqp.Dial(os.Getenv("RMQ_ADDR_URL"))
 	if err != nil {
-		log.Fatal(err)
+		log.Printf("Failed to connect to RabbitMQ: %s", err.Error())
+		return false
 	}
 
 	RMQ_CHANN, _ = RMQ_CONN.Channel()
@@ -49,8 +43,11 @@ func RMQ_setup() {
 		nil,
 	)
 	if err != nil {
-		log.Fatal(err)
+		log.Printf("Failed to start/connect to %s: %s\n", RMQ_EX_NAME, err.Error())
+		return false
 	}
+
+	return true
 }
 
 func RMQ_close() {

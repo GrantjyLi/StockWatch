@@ -8,3 +8,7 @@ docker run -d \
   rabbitmq:3-management
 
 https://localhost:15672
+
+System architecture:
+    StockwatchUI --> watchlistAPI --> AWS RDS database
+    AlertsPoller takes tickers from RDS database --> RabbitMQ --> AlertsEvaluator --> RabbitMQ --> EmailSender

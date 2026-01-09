@@ -20,7 +20,6 @@ WORKDIR /WatchlistAPI
 
 # Copy the binary from the builder stage
 COPY --from=builder /WatchlistAPI/WatchlistAPI .
-COPY --from=builder /WatchlistAPI/WatchlistAPI.env .
 
 EXPOSE 8080
 

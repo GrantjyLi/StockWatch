@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"os"
 
@@ -41,7 +40,7 @@ var (
 	RMQ_MSGS         <-chan amqp.Delivery
 )
 
-func setupAlertsExchange() {
+func setupAlertsExchange() bool {
 	err := RMQ_ALERTS_CHANN.ExchangeDeclare(
 		RMQ_ALERTS_EX_NAME,
 		RMQ_ALERTS_EX_KIND,
@@ -52,7 +51,8 @@ func setupAlertsExchange() {
 		nil,
 	)
 	if err != nil {
-		log.Fatal(err)
+		log.Printf("Failed to start/connect to %s: %s", RMQ_ALERTS_EX_NAME, err.Error())
+		return false
 	}
 
 	RMQ_QUEUE, err := RMQ_ALERTS_CHANN.QueueDeclare(
@@ -64,13 +64,23 @@ func setupAlertsExchange() {
 		nil,
 	)
 
-	RMQ_ALERTS_CHANN.QueueBind(
+	if err != nil {
+		log.Printf("Failed to start/connect to %s: %s", RMQ_QU_NAME, err.Error())
+		return false
+	}
+
+	err = RMQ_ALERTS_CHANN.QueueBind(
 		RMQ_QUEUE.Name,
 		RMQ_QU_ROUT_KEY,
 		RMQ_ALERTS_EX_NAME,
 		RMQ_QU_NO_WAIT,
 		nil,
 	)
+
+	if err != nil {
+		log.Printf("Failed to start/connect to queue %s: %s", RMQ_QUEUE.Name, err.Error())
+		return false
+	}
 
 	RMQ_MSGS, _ = RMQ_ALERTS_CHANN.Consume(
 		RMQ_QUEUE.Name,
@@ -81,23 +91,24 @@ func setupAlertsExchange() {
 		false,
 		nil,
 	)
+
+	return true
 }
 
-func RMQ_setup() {
-	RMQ_address := fmt.Sprintf(
-		"amqp://%s:%s@%s/",
-		os.Getenv("RMQ_UN"),
-		os.Getenv("RMQ_PW"),
-		os.Getenv("RMQ_ADDR"),
-	)
+func RMQ_setup() bool {
 	var err error
-	RMQ_CONN, err = amqp.Dial(RMQ_address)
+	RMQ_CONN, err = amqp.Dial(os.Getenv("RMQ_ADDR_URL"))
 	if err != nil {
-		log.Fatal(err)
+		log.Printf("Failed to connect to RabbitMQ: %s", err.Error())
+		return false
 	}
 
 	RMQ_ALERTS_CHANN, _ = RMQ_CONN.Channel()
-	setupAlertsExchange()
+	if !setupAlertsExchange() {
+		return false
+	}
+
+	return true
 }
 
 func RMQ_close() {

@@ -3,27 +3,24 @@ package main
 import (
 	"database/sql"
 	"log"
-
-	"github.com/joho/godotenv"
+	"time"
 )
-
-const ENV_FILE = "AlertsEvaluator.env"
 
 var database *sql.DB
 
 func main() {
 
-	err := godotenv.Load(ENV_FILE)
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
-	log.Println("Loaded environment variables")
-
 	database = DB_connect()
 	defer database.Close()
 	log.Println("Connected to database")
 
-	RMQ_setup()
+	for {
+		if RMQ_setup() {
+			break
+		}
+		log.Println("RabbitMQ failed to connect")
+		time.Sleep(1 * time.Second)
+	}
 	log.Println("RabbitMQ conenction setup")
 
 	log.Println("Evaluating new prices...")

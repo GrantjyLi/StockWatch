@@ -17,6 +17,19 @@ export default function App() {
     const [watchlists, setWatchlists] = useState([]);
     const [showAddWatchlistPopup, setShowAddPopup] = useState(false);
 
+    async function healthCheck(){
+        const health = await checkHealth();
+        
+        if (health === null) {
+            setErrorPopup(true)
+            setErrorMessage("Server is Down")
+            return
+        }
+        
+        console.log("Server Health Check:", health);
+        setServerStatus(true)
+    }
+
     async function handleLogin(email) {
         var login_userID = await login(email)
         
@@ -34,29 +47,19 @@ export default function App() {
         setUserEmail(null)
         setUserId("")
         localStorage.removeItem("userID");
-
     }
 
     async function fetchWatchlists() {
-        const data = await getWatchlists(userID); // assume this returns JSON
+        const data = await getWatchlists(userID);
         setWatchlists(data);
     }
 
     async function init() {
-        const health = await checkHealth();
-        
-        if (health === null) {
-            setErrorPopup(true)
-            setErrorMessage("Server is Down")
-            return
-        }
-        
-        console.log("Server Health Check:", health);
-        setServerStatus(true)
         await fetchWatchlists();
     }
     
     useEffect(() => {
+        healthCheck()
         const savedUserID = localStorage.getItem("userID");
 
         if (savedUserID) {
@@ -90,7 +93,15 @@ export default function App() {
     }
 
     if (!userID) {
-        return <Login handleLogin={handleLogin} />;
+        return <>
+        <Login handleLogin={handleLogin} />;
+            {errorPopup && (
+                <ErrorPopup 
+                    message={errorMessage}
+                    onClose={() => setErrorPopup(false)} 
+                />
+            )}
+        </>
     }
 
     return (

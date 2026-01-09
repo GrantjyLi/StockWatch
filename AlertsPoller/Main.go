@@ -4,31 +4,28 @@ import (
 	"database/sql"
 	"log"
 	"os"
-
-	"github.com/joho/godotenv"
+	"time"
 )
-
-// todo: investigate multiple queries for 1 ticker
-const ENV_FILE = "AlertsPoller.env"
 
 var database *sql.DB
 var FINNHUB_API_KEY string
 
 func main() {
-	err := godotenv.Load(ENV_FILE)
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
-	log.Println("Loaded environment variables")
 
 	database = DB_connect()
 	defer database.Close()
 	log.Println("Connected to database")
 
-	allAlerts, err := DB_getAlertTickers()
+	allAlerts, _ := DB_getAlertTickers()
 	log.Println("Alerts retreived")
 
-	RMQ_setup()
+	for {
+		if RMQ_setup() {
+			break
+		}
+		log.Println("RabbitMQ failed to connect")
+		time.Sleep(1 * time.Second)
+	}
 	log.Println("RabbitMQ conenction setup")
 
 	FINNHUB_API_KEY = os.Getenv("FINNHUB_API_KEY")

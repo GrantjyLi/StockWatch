@@ -1,0 +1,34 @@
+services:
+    watchlist-api:
+        build: ./watchlistAPI
+        ports:
+            - "8080:8080"
+        env_file:
+            - .env
+    
+    rabbitmq:
+        image: rabbitmq:3-management
+        ports:
+            - "5672:5672"
+            - "15672:15672"
+    
+    alerts-poller:
+        build: ./AlertsPoller
+        depends_on:
+            - rabbitmq
+        env_file:
+            - .env
+
+    alerts-evaluator:
+        build: ./AlertsEvaluator
+        depends_on:
+            - rabbitmq
+        env_file:
+            - .env
+
+    email-sender:
+        build: ./EmailSender
+        depends_on:
+            - rabbitmq
+        env_file:
+            - .env
