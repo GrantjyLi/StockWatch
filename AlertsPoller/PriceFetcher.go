@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -10,7 +9,6 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
-	"github.com/redis/go-redis/v9"
 )
 
 type PriceCache struct {
@@ -41,31 +39,6 @@ const (
 	FINNHUB_RATE_HZ  = 30
 )
 
-var (
-	ctx = context.Background()
-	rdb *redis.Client
-)
-
-/* Price Caching ============================ */
-
-func initRedis() {
-	rdb = redis.NewClient(&redis.Options{
-		Addr: REDIS_ADDR,
-	})
-}
-
-func storePrice(symbol string, price float32) {
-	data, _ := json.Marshal(PriceCache{
-		Price: price,
-		TS:    time.Now().Unix(),
-	})
-
-	err := rdb.Set(ctx, symbol, data, 0).Err()
-	if err != nil {
-		log.Println("Redis error:", err)
-	}
-}
-
 /* REST init ============================ */
 
 func fetchInitialPrice(alert *Alert) {
@@ -87,7 +60,6 @@ func fetchInitialPrice(alert *Alert) {
 	}
 
 	if quote.Current > 0 {
-		storePrice(ticker, quote.Current)
 		publishNewPrice(&TickerData{
 			Ticker: ticker,
 			Price:  quote.Current,
@@ -142,7 +114,6 @@ func getPriceUpdates(alerts []*Alert) {
 
 		if msg.Type == "trade" {
 			for _, trade := range msg.Data {
-				storePrice(trade.Ticker, trade.Price)
 				publishNewPrice(&trade)
 			}
 		}

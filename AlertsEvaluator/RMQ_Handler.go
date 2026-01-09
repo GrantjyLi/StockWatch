@@ -15,11 +15,6 @@ import (
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
-type PriceUpdate struct {
-	Ticker string  `json:"s"`
-	Price  float32 `json:"p"`
-}
-
 const (
 	RMQ_PRICES_EX_NAME     = "new_prices"
 	RMQ_PRICES_EX_KIND     = "topic"
@@ -146,7 +141,6 @@ func RMQ_close() {
 
 func publishNewAlert(newAlert *Triggered_Alert) error {
 	alertData, _ := json.Marshal(newAlert)
-
 	return RMQ_ALERTS_CHANN.Publish(
 		RMQ_ALERTS_EX_NAME,
 		(RMQ_ALERTS_EX_TOPIC + "." + newAlert.alert_ID),

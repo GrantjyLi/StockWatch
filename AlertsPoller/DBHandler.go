@@ -30,7 +30,7 @@ func DB_connect() *sql.DB {
 
 	db, err := sql.Open("pgx", DB_DSN)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Unable to open database connection: %v\n", err)
+		log.Fatalf("Unable to open database connection: %s\n", err)
 		os.Exit(1)
 	}
 
@@ -42,7 +42,7 @@ func DB_connect() *sql.DB {
 	return db
 }
 
-func DB_getAlerts() ([]*Alert, error) {
+func DB_getAlertTickers() ([]*Alert, error) {
 	alertsQuery := "SELECT DISTINCT alerts.ticker FROM alerts"
 
 	if len(ALERT_CONDITIONS) > 0 {

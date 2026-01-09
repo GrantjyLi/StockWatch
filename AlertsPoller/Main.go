@@ -2,7 +2,6 @@ package main
 
 import (
 	"database/sql"
-	// "fmt"
 	"log"
 	"os"
 
@@ -20,17 +19,24 @@ func main() {
 	if err != nil {
 		log.Fatal("Error loading .env file")
 	}
+	log.Println("Loaded environment variables")
 
 	database = DB_connect()
 	defer database.Close()
-	allAlerts, err := DB_getAlerts()
+	log.Println("Connected to database")
+
+	allAlerts, err := DB_getAlertTickers()
+	log.Println("Alerts retreived")
 
 	RMQ_setup()
+	log.Println("RabbitMQ conenction setup")
 
 	FINNHUB_API_KEY = os.Getenv("FINNHUB_API_KEY")
-	initRedis()
 
 	bootstrapPrices(allAlerts)
+	log.Println("Initial prices retrieved")
+
+	log.Println("Streaming current prices...")
 	getPriceUpdates(allAlerts)
 	RMQ_close()
 }
