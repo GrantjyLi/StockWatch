@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"strings"
 
 	"gopkg.in/gomail.v2"
 )
@@ -26,7 +27,7 @@ func setupSMTP() {
 
 }
 
-func sendEmail(alertData *Triggered_Alert) {
+func sendAlertEmail(alertData *Triggered_Alert) {
 
 	m := gomail.NewMessage()
 	m.SetHeader("From", EMAIL_ADDR)
@@ -44,11 +45,48 @@ func sendEmail(alertData *Triggered_Alert) {
 
 	m.SetBody("text/plain", emailMessage)
 
-	d := gomail.NewDialer(SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASSWORD)
-	// d.SSL = true // enable for port 465
+	// d := gomail.NewDialer(SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASSWORD)
+	// // d.SSL = true // enable for port 465
 
-	if err := d.DialAndSend(m); err != nil {
-		log.Printf("Email failed to send: %s\n", err.Error())
-	}
+	// if err := d.DialAndSend(m); err != nil {
+	// 	log.Printf("Email failed to send: %s\n", err.Error())
+	// }
 	log.Printf("Email alert sent: %s to %s\n", alertData.Alert_ID, alertData.User_email)
+}
+
+func FormatWatchlistEmail(w *Watchlist) string {
+	var b strings.Builder
+
+	fmt.Fprintf(&b, "Watchlist %s, alerts:\n", w.Name)
+
+	for _, a := range w.Alerts {
+		fmt.Fprintf(&b, "%s %s %.2f,\n", a.Ticker, a.Operator, a.Price)
+	}
+
+	return b.String()
+}
+
+func sendWatchlistEmail(watchlistReqData *CreateWatchlistRequest_t) {
+
+	watchlistName := &watchlistReqData.WatchlistData.Name
+	userEmail := &watchlistReqData.User_email
+
+	m := gomail.NewMessage()
+	m.SetHeader("From", EMAIL_ADDR)
+	m.SetHeader("To", "ba105bca98c8@maileroo-tester.com") // testing
+	// m.SetHeader("To", *userEmail)
+	m.SetHeader("Subject", "Your Alert has been triggered.")
+
+	emailMessage := FormatWatchlistEmail(&watchlistReqData.WatchlistData)
+
+	m.SetBody("text/plain", emailMessage)
+
+	// d := gomail.NewDialer(SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASSWORD)
+	// // d.SSL = true // enable for port 465
+
+	// if err := d.DialAndSend(m); err != nil {
+	// 	log.Printf("Email failed to send: %s\n", err.Error())
+	// }
+	log.Printf("Email watchlist sent: %s to %s\n", *watchlistName, *userEmail)
+	log.Printf("%s\n", emailMessage)
 }

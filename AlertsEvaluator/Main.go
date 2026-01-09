@@ -8,6 +8,8 @@ import (
 
 var database *sql.DB
 
+const RMQ_RETRY_CONN_TIME = 5
+
 func main() {
 
 	database = DB_connect()
@@ -19,7 +21,7 @@ func main() {
 			break
 		}
 		log.Println("RabbitMQ failed to connect")
-		time.Sleep(1 * time.Second)
+		time.Sleep(RMQ_RETRY_CONN_TIME * time.Second)
 	}
 	log.Println("RabbitMQ conenction setup")
 

@@ -1,16 +1,17 @@
 services:
+
+    rabbitmq:
+        image: rabbitmq:3-management
+        ports:
+            - "5672:5672"
+            - "15672:15672"
+    
     watchlist-api:
         build: ./watchlistAPI
         ports:
             - "8080:8080"
         env_file:
             - .env
-    
-    rabbitmq:
-        image: rabbitmq:3-management
-        ports:
-            - "5672:5672"
-            - "15672:15672"
     
     alerts-poller:
         build: ./AlertsPoller

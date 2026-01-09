@@ -71,11 +71,12 @@ export default function App() {
         if(userID){
             init(); 
         }
-    }, [userID]); // empty array → runs only once on page refresh
+    }, [userID]);
 
     const addNewWatchlist = (WatchlistName, newAlerts) => {
         var newWatchlistDataJson = {
             "userID": userID,
+            "email" : userEmail,
             "watchlistData": {
                 "name": WatchlistName,
                 "alerts": newAlerts

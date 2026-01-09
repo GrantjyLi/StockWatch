@@ -5,9 +5,12 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 )
 
 var database *sql.DB
+
+const RMQ_RETRY_CONN_TIME = 5
 
 func enableCORS(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -29,6 +32,16 @@ func enableCORS(next http.Handler) http.Handler {
 func main() {
 	database = DB_connect()
 	defer database.Close()
+	log.Println("Connected to database")
+
+	for {
+		if RMQ_setup() {
+			break
+		}
+		log.Println("RabbitMQ failed to connect")
+		time.Sleep(RMQ_RETRY_CONN_TIME * time.Second)
+	}
+	log.Println("RabbitMQ conenction setup")
 
 	mux := http.NewServeMux()
 

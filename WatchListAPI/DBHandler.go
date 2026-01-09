@@ -36,13 +36,12 @@ func DB_connect() *sql.DB {
 	return db
 }
 
-func DB_CheckLogin(loginRequest LoginRequest_t) (string, error) {
-	userEmail := loginRequest.Email
+func DB_CheckLogin(loginReq *LoginRequest_t) (string, error) {
 	var userID string
 
 	err := database.QueryRow(
 		`select id from users where email = $1`,
-		userEmail,
+		loginReq.User_email,
 	).Scan(&userID)
 
 	if err == sql.ErrNoRows {
@@ -54,7 +53,7 @@ func DB_CheckLogin(loginRequest LoginRequest_t) (string, error) {
 	return userID, nil
 }
 
-func DB_writeWatchlist(createWatchlistReq CreateWatchlistRequest_t) error {
+func DB_writeWatchlist(createWatchlistReq *CreateWatchlistRequest_t) error {
 	tx, err := database.Begin()
 
 	if err != nil {
@@ -103,7 +102,7 @@ func DB_writeWatchlist(createWatchlistReq CreateWatchlistRequest_t) error {
 	return nil
 }
 
-func DB_deleteWatchlist(watchlistData DeleteWatchlistsRequest_t) error {
+func DB_deleteWatchlist(watchlistData *DeleteWatchlistsRequest_t) error {
 	tx, err := database.Begin()
 	if err != nil {
 		return err
@@ -127,7 +126,7 @@ func DB_deleteWatchlist(watchlistData DeleteWatchlistsRequest_t) error {
 	return nil
 }
 
-func DB_getWatchlists(userData GetWatchlistsRequest_t) (map[string]*Watchlist, error) {
+func DB_getWatchlists(userData *GetWatchlistsRequest_t) (map[string]*Watchlist, error) {
 	rows, err := database.Query(
 		`SELECT watchlists.name, watchlists.id, alerts.id, alerts.ticker, alerts.operator, alerts.target_price
 		FROM watchlists JOIN alerts

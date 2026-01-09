@@ -2,11 +2,13 @@ package main
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 )
 
 type CreateWatchlistRequest_t struct {
 	UserID        string    `json:"userID"`
+	User_email    string    `json:"email"`
 	WatchlistData Watchlist `json:"watchlistData"`
 }
 type Watchlist struct {
@@ -22,7 +24,7 @@ type Alert struct {
 }
 
 type LoginRequest_t struct {
-	Email string `json:"email"`
+	User_email string `json:"email"`
 }
 
 type GetWatchlistsRequest_t struct {
@@ -58,7 +60,7 @@ func LoginRequest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userID, err := DB_CheckLogin(req)
+	userID, err := DB_CheckLogin(&req)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -80,11 +82,18 @@ func CreateWatchlist(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = DB_writeWatchlist(req)
+	err = DB_writeWatchlist(&req)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
+	err = publishNewWatchlist(&req)
+	if err != nil {
+		log.Printf("Error publishing watchlist email: %s\n", err.Error())
+		return
+	}
+
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(map[string]string{
 		"status": "watchlist created",
@@ -103,7 +112,7 @@ func DeleteWatchlists(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = DB_deleteWatchlist(req)
+	err = DB_deleteWatchlist(&req)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -127,7 +136,7 @@ func GetWatchlists(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	watchlists, err := DB_getWatchlists(req)
+	watchlists, err := DB_getWatchlists(&req)
 	if err != nil {
 		http.Error(w, "Failed to fetch watchlists", http.StatusInternalServerError)
 		return
