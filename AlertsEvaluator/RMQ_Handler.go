@@ -141,9 +141,10 @@ func RMQ_close() {
 
 func publishNewAlert(newAlert *Triggered_Alert) error {
 	alertData, _ := json.Marshal(newAlert)
+
 	return RMQ_ALERTS_CHANN.Publish(
 		RMQ_ALERTS_EX_NAME,
-		(RMQ_ALERTS_EX_TOPIC + "." + newAlert.alert_ID),
+		(RMQ_ALERTS_EX_TOPIC + "." + newAlert.Alert_ID),
 		false,
 		false,
 		amqp.Publishing{
@@ -160,7 +161,9 @@ func receiveNewPrice() {
 		json.Unmarshal(msg.Body, &update)
 
 		triggered_alerts, _ := DB_getAlertData(&update)
+
 		for _, T := range triggered_alerts {
+			log.Println("Alert triggered: " + T.Alert_ID)
 			publishNewAlert(T)
 		}
 

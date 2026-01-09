@@ -79,7 +79,6 @@ func bootstrapPrices(alerts []*Alert) {
 		<-timeTicker.C
 
 		initPrices_WG.Add(1)
-		go fetchInitialPrice(alert)
 
 		go func(a *Alert) {
 			defer initPrices_WG.Done()
@@ -110,7 +109,7 @@ func getPriceUpdates(alerts []*Alert) {
 		if err != nil {
 			log.Fatal("WS read error:", err)
 		}
-		fmt.Println("Message from server ", msg)
+		log.Println("Message from server ", msg)
 
 		if msg.Type == "trade" {
 			for _, trade := range msg.Data {

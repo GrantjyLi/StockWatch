@@ -10,11 +10,11 @@ import (
 )
 
 type Triggered_Alert struct {
-	alert_ID     string
-	ticker       string
-	target_price float32
-	operator     string
-	user_email   string
+	Alert_ID     string  `json:"alert_ID"`
+	Ticker       string  `json:"ticker"`
+	Target_price float32 `json:"target_price"`
+	Operator     string  `json:"operator"`
+	User_email   string  `json:"user_email"`
 }
 
 const (
@@ -115,7 +115,6 @@ func receiveNewAlert() {
 		var update Triggered_Alert
 		json.Unmarshal(msg.Body, &update)
 
-		fmt.Println("Received alert" + update.alert_ID)
 		go func() {
 			sendEmail(&update)
 			// DB_AlertTriggered(&update)

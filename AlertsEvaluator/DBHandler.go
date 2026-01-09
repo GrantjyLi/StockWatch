@@ -10,13 +10,12 @@ import (
 )
 
 type Triggered_Alert struct {
-	alert_ID     string
-	ticker       string
-	target_price float32
-	operator     string
-	user_email   string
+	Alert_ID     string  `json:"alert_ID"`
+	Ticker       string  `json:"ticker"`
+	Target_price float32 `json:"target_price"`
+	Operator     string  `json:"operator"`
+	User_email   string  `json:"user_email"`
 }
-
 type PriceUpdate struct {
 	Ticker string  `json:"s"`
 	Price  float32 `json:"p"`
@@ -57,12 +56,12 @@ func DB_getAlertData(update *PriceUpdate) ([]*Triggered_Alert, error) {
 		FROM alerts a
 		JOIN watchlists w ON a.watchlist_id = w.id
 		JOIN users u ON w.user_id = u.id
-		WHERE a.ticker = 'VOO'
+		WHERE a.ticker = $1
 		AND a.triggered = false
 		AND (
-			(a.operator = '>=' AND 2000 >= a.target_price) OR
-			(a.operator = '<=' AND 2000 <= a.target_price) OR
-			(a.operator = '='  AND 2000 =  a.target_price)
+			(a.operator = '>=' AND $2 >= a.target_price) OR
+			(a.operator = '<=' AND $2 <= a.target_price) OR
+			(a.operator = '='  AND $2 =  a.target_price)
 		);`,
 		update.Ticker,
 		update.Price,
@@ -73,19 +72,19 @@ func DB_getAlertData(update *PriceUpdate) ([]*Triggered_Alert, error) {
 	defer rows.Close()
 
 	var triggeredAlerts []*Triggered_Alert
-	var alertID, operatorCond, userEmail string
+	var alertID, operator, userEmail string
 	var targetPrice float32
 
 	for rows.Next() {
-		if err := rows.Scan(&alertID, &targetPrice, &operatorCond, &userEmail); err != nil {
+		if err := rows.Scan(&alertID, &targetPrice, &operator, &userEmail); err != nil {
 			return nil, err
 		}
 		triggeredAlerts = append(triggeredAlerts, &Triggered_Alert{
-			alert_ID:     alertID,
-			ticker:       update.Ticker,
-			target_price: targetPrice,
-			operator:     operatorCond,
-			user_email:   userEmail,
+			Alert_ID:     alertID,
+			Ticker:       update.Ticker,
+			Target_price: targetPrice,
+			Operator:     operator,
+			User_email:   userEmail,
 		})
 	}
 

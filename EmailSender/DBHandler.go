@@ -41,7 +41,7 @@ func DB_AlertTriggered(alert *Triggered_Alert) (bool, error) {
 			triggered_at = Now(),
 			triggered = true
 		where id = $1`,
-		alert.alert_ID,
+		alert.Alert_ID,
 	)
 
 	if err != nil {

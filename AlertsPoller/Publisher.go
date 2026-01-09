@@ -64,7 +64,6 @@ func RMQ_close() {
 
 func publishNewPrice(newUpdate *TickerData) error {
 	tickerData, _ := json.Marshal(newUpdate)
-
 	return RMQ_CHANN.Publish(
 		RMQ_EX_NAME,
 		(RMQ_EX_TOPIC + "." + newUpdate.Ticker),

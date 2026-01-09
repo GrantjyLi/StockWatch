@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"strconv"
 
@@ -29,27 +30,25 @@ func sendEmail(alertData *Triggered_Alert) {
 
 	m := gomail.NewMessage()
 	m.SetHeader("From", EMAIL_ADDR)
-	m.SetHeader("To", "59ac89980ed2@maileroo-tester.com")
+	m.SetHeader("To", "ba105bca98c8@maileroo-tester.com") // testing
+	// m.SetHeader("To", alertData.User_email)
 	m.SetHeader("Subject", "Your Alert has been triggered.")
 
 	emailMessage := fmt.Sprintf(
-		"Alert %s was triggered.\n%s %s %.2f",
-		alertData.alert_ID,
-		alertData.ticker,
-		alertData.operator,
-		alertData.target_price,
+		"Alert %s was triggered.\n%s %s $%.2f",
+		alertData.Alert_ID,
+		alertData.Ticker,
+		alertData.Operator,
+		alertData.Target_price,
 	)
 
-	fmt.Println(emailMessage)
-	fmt.Println(alertData)
+	m.SetBody("text/plain", emailMessage)
 
-	// 	m.SetBody("text/plain", emailMessage)
+	d := gomail.NewDialer(SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASSWORD)
+	// d.SSL = true // enable for port 465
 
-	// 	d := gomail.NewDialer(SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASSWORD)
-	// 	// d.SSL = true // enable for port 465
-
-	// 	if err := d.DialAndSend(m); err != nil {
-	// 		log.Fatal(err)
-	// 	}
-	// 	fmt.Println("Email Sent" + alertData.alert_ID)
+	if err := d.DialAndSend(m); err != nil {
+		log.Printf("Email failed to send: %s\n", err.Error())
+	}
+	log.Printf("Email alert sent: %s to %s\n", alertData.Alert_ID, alertData.User_email)
 }
