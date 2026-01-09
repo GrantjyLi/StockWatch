@@ -48,10 +48,11 @@ export async function getWatchlists(userID){
 }
 
 export async function createWatchlist(watchlistData) {
+    console.log(watchlistData)
     try {
         const response = await axios.post(
             `${STOCKWATCH_API_URL}/CreateWatchlist`,
-            watchlistData, // <-- your JSON dictionary goes here
+            watchlistData,
             { headers: { "Content-Type": "application/json" } }
         );
 

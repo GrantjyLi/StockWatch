@@ -6,7 +6,7 @@ export default function WatchlistCard({ WID, watchlistData, deleteWatchlist }) {
         <div style={styles.card} key={WID}>
             <button
                 style={styles.deleteBtn}
-                onClick={()=>{deleteWatchlist(WID)}}
+                onClick={()=>{deleteWatchlist(WID, watchlistData.name)}}
             >
                 ✕
             </button>

@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"log"
+	"sync"
 	"time"
 )
 
@@ -28,7 +29,20 @@ func main() {
 	}
 	log.Println("RabbitMQ conenction setup")
 
-	log.Println("Sending emails for incoming triggered alerts...")
-	receiveNewAlert()
+	var wg sync.WaitGroup
+	wg.Add(2)
+
+	go func() {
+		defer wg.Done()
+		receiveNewAlert()
+	}()
+
+	go func() {
+		defer wg.Done()
+		receiveNewWatchlist()
+	}()
+
+	log.Println("Alert and watchlist consumers running...")
+	wg.Wait()
 	RMQ_close()
 }

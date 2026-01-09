@@ -26,7 +26,7 @@ type Watchlist struct {
 	Alerts []*Alert `json:"alerts"`
 }
 type Alert struct {
-	ID       string
+	ID       string  `json:"ID"`
 	Ticker   string  `json:"ticker"`
 	Operator string  `json:"operator"`
 	Price    float32 `json:"price"`
@@ -90,6 +90,7 @@ func setupAlertsExchange() bool {
 		log.Printf("Failed to start/connect to %s: %s", RMQ_ALERTS_EX_NAME, err.Error())
 		return false
 	}
+	log.Println("Connected to exchange: ", RMQ_ALERTS_EX_NAME)
 
 	RMQ_ALERTS_QUEUE, err := RMQ_ALERTS_CHANN.QueueDeclare(
 		RMQ_ALERTS_QU_NAME,
@@ -117,6 +118,7 @@ func setupAlertsExchange() bool {
 		log.Printf("Failed to start/connect to queue %s: %s", RMQ_ALERTS_QUEUE.Name, err.Error())
 		return false
 	}
+	log.Println("Fully bond to queue: ", RMQ_ALERTS_QU_NAME)
 
 	RMQ_ALERTS_MSGS, _ = RMQ_ALERTS_CHANN.Consume(
 		RMQ_ALERTS_QUEUE.Name,
@@ -145,6 +147,7 @@ func setupWatchlistsExchange() bool {
 		log.Printf("Failed to start/connect to %s: %s", RMQ_WLISTS_EX_NAME, err.Error())
 		return false
 	}
+	log.Println("Connected to exchange: ", RMQ_WLISTS_EX_NAME)
 
 	RMQ_WLISTS_QUEUE, err := RMQ_WLISTS_CHANN.QueueDeclare(
 		RMQ_WLISTS_QU_NAME,
@@ -172,6 +175,7 @@ func setupWatchlistsExchange() bool {
 		log.Printf("Failed to start/connect to queue %s: %s", RMQ_WLISTS_QUEUE.Name, err.Error())
 		return false
 	}
+	log.Println("Fully bond to queue: ", RMQ_WLISTS_QU_NAME)
 
 	RMQ_WLISTS_MSGS, _ = RMQ_WLISTS_CHANN.Consume(
 		RMQ_WLISTS_QUEUE.Name,
@@ -198,6 +202,9 @@ func RMQ_setup() bool {
 	RMQ_WLISTS_CHANN, _ = RMQ_CONN.Channel()
 
 	if !setupAlertsExchange() {
+		return false
+	}
+	if !setupWatchlistsExchange() {
 		return false
 	}
 
@@ -232,10 +239,8 @@ func receiveNewAlert() {
 }
 
 func receiveNewWatchlist() {
-
 	for msg := range RMQ_WLISTS_MSGS {
 		var update CreateWatchlistRequest_t
-		log.Println("New watchlist request email: ", update.User_email)
 		json.Unmarshal(msg.Body, &update)
 
 		go func() {

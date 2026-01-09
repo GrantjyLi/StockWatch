@@ -88,5 +88,4 @@ func sendWatchlistEmail(watchlistReqData *CreateWatchlistRequest_t) {
 	// 	log.Printf("Email failed to send: %s\n", err.Error())
 	// }
 	log.Printf("Email watchlist sent: %s to %s\n", *watchlistName, *userEmail)
-	log.Printf("%s\n", emailMessage)
 }

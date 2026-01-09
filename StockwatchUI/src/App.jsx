@@ -6,16 +6,20 @@ import Header from "./components/Header";
 import WatchlistGrid from "./components/WatchlistGrid";
 import AddWatchlistPopup from "./components/AddWatchlistPopup";
 import ErrorPopup from "./components/ErrorMSGPopup";
+import WarningPopup from "./components/WarningMSGPopup";
 import { checkHealth, login, getWatchlists, deleteWatchlist, createWatchlist } from "./APIInterface"
 
 export default function App() {
     const [serverStatus, setServerStatus] = useState(false);
     const [errorPopup, setErrorPopup] = useState(false);
+    const [warningPopup, setWarningPopup] = useState(false);
     const [errorMessage, setErrorMessage] = useState("");
+    const [warningMessage, setWarningMessage] = useState("");
     const [userEmail, setUserEmail] = useState(null);
     const [userID, setUserId] = useState("");
     const [watchlists, setWatchlists] = useState([]);
     const [showAddWatchlistPopup, setShowAddPopup] = useState(false);
+    const [delWID, setDelWID] = useState(null); // wathclist ID when the user wants to delete one
 
     async function healthCheck(){
         const health = await checkHealth();
@@ -35,6 +39,7 @@ export default function App() {
         
         if (login_userID){
             localStorage.setItem("userID", login_userID.userID);
+            localStorage.setItem("userEmail", email);
 
             setUserEmail(email)
             setUserId(login_userID.userID)
@@ -47,6 +52,7 @@ export default function App() {
         setUserEmail(null)
         setUserId("")
         localStorage.removeItem("userID");
+        localStorage.removeItem("userEmail");
     }
 
     async function fetchWatchlists() {
@@ -61,9 +67,11 @@ export default function App() {
     useEffect(() => {
         healthCheck()
         const savedUserID = localStorage.getItem("userID");
+        const savedUserEmail = localStorage.getItem("userEmail");
 
         if (savedUserID) {
             setUserId(savedUserID);
+            setUserEmail(savedUserEmail)
         }
     }, []);
 
@@ -73,7 +81,13 @@ export default function App() {
         }
     }, [userID]);
 
-    const addNewWatchlist = (WatchlistName, newAlerts) => {
+    const addNewWatchlist = async (WatchlistName, newAlerts) => {
+        if (newAlerts.length == 0){
+            setErrorPopup(true)
+            setErrorMessage("New watchlists must require 1 alert.")
+            return
+        }
+        
         var newWatchlistDataJson = {
             "userID": userID,
             "email" : userEmail,
@@ -82,15 +96,26 @@ export default function App() {
                 "alerts": newAlerts
             }
         }
-        createWatchlist(newWatchlistDataJson)
+        await createWatchlist(newWatchlistDataJson)
         setShowAddPopup(false)
+        await  fetchWatchlists();
     }
 
-    const delWatchlist = (watchlistID) => {
+    const delWatchlistConfirm = (watchlistID, watchlistName) =>{
+        setWarningPopup(true)
+        setWarningMessage("Are you sure you want to delete " + watchlistName)
+        setDelWID(watchlistID)
+    }
+
+    const delWatchlist = async () => {
+        if (delWID == "" || delWID === null) return
+        
         var deleteWLJson = {
-            "ID": watchlistID
+            "ID": delWID
         }
-        deleteWatchlist(deleteWLJson)
+        await deleteWatchlist(deleteWLJson)
+        setDelWID(null)
+        await fetchWatchlists();
     }
 
     if (!userID) {
@@ -116,6 +141,13 @@ export default function App() {
                     onClose={() => setErrorPopup(false)} 
                 />
             )}
+            {warningPopup && (
+                <WarningPopup 
+                    message={warningMessage}
+                    onAccept={() => {delWatchlist(); setWarningPopup(false)}}
+                    onCancel={() => setWarningPopup(false)}
+                />
+            )}
             {showAddWatchlistPopup && (
                 <AddWatchlistPopup 
                     addNewWatchlist={addNewWatchlist}
@@ -125,7 +157,7 @@ export default function App() {
             <WatchlistGrid
                 watchlists={watchlists}
                 onAdd={()=>setShowAddPopup(true)}
-                onDelete={delWatchlist}
+                onDelete={delWatchlistConfirm}
             />
         </>
     );

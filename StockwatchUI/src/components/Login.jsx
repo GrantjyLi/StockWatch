@@ -1,18 +1,27 @@
 import React, { useState } from "react";
 
-export default function Login({ handleLogin }) {
+export default function Login({ handleLogin, handleCreateUser }) {
     const [email, setEmail] = useState("");
+    const [name, setName] = useState(""); // new field for creating user
+    const [isCreating, setIsCreating] = useState(false); // toggle mode
 
     const handleSubmit = (e) => {
         e.preventDefault();
         if (!email) return;
-        handleLogin(email);
+
+        if (isCreating) {
+            handleCreateUser({ email, name });
+        } else {
+            handleLogin(email);
+        }
     };
 
     return (
         <div style={styles.container}>
             <form onSubmit={handleSubmit} style={styles.card}>
-                <h2>Sign In</h2>
+                <h2>{isCreating ? "Create Account" : "Sign In"}</h2>
+
+                {/* Email input */}
                 <input
                     type="email"
                     placeholder="Email address"
@@ -21,8 +30,17 @@ export default function Login({ handleLogin }) {
                     required
                     style={styles.input}
                 />
+
                 <button type="submit" style={styles.button}>
-                    Continue
+                    {isCreating ? "Create Account" : "Login"}
+                </button>
+
+                <button
+                    type="button"
+                    style={styles.button}
+                    onClick={() => setIsCreating(!isCreating)}
+                >
+                    {isCreating ? "Back to Login" : "Create New User"}
                 </button>
             </form>
         </div>
@@ -50,10 +68,13 @@ const styles = {
         width: "100%",
         padding: "10px",
         marginBottom: "1rem",
+        boxSizing: "border-box",
     },
     button: {
         width: "100%",
         padding: "10px",
         cursor: "pointer",
-    },
+        boxSizing: "border-box",
+        marginBottom: "0.5rem",
+    }
 };
