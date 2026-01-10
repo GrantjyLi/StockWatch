@@ -27,6 +27,10 @@ type LoginRequest_t struct {
 	User_email string `json:"email"`
 }
 
+type CreateUserRequest_t struct {
+	User_email string `json:"email"`
+}
+
 type GetWatchlistsRequest_t struct {
 	ID string `json:"ID"`
 }
@@ -71,6 +75,29 @@ func LoginRequest(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+func CreateUser(w http.ResponseWriter, r *http.Request) {
+	if checkMethod(w, r) == false {
+		return
+	}
+
+	var req CreateUserRequest_t
+	err := json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		http.Error(w, "Invalid JSON", http.StatusBadRequest)
+		return
+	}
+
+	err = DB_createUser(&req)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(map[string]string{
+		"status": "watchlist created",
+	})
+}
+
 func CreateWatchlist(w http.ResponseWriter, r *http.Request) {
 	if checkMethod(w, r) == false {
 		return
@@ -82,7 +109,7 @@ func CreateWatchlist(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = DB_writeWatchlist(&req)
+	err = DB_createWatchlist(&req)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

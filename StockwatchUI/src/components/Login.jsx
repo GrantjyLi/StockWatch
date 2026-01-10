@@ -2,7 +2,6 @@ import React, { useState } from "react";
 
 export default function Login({ handleLogin, handleCreateUser }) {
     const [email, setEmail] = useState("");
-    const [name, setName] = useState(""); // new field for creating user
     const [isCreating, setIsCreating] = useState(false); // toggle mode
 
     const handleSubmit = (e) => {
@@ -10,7 +9,13 @@ export default function Login({ handleLogin, handleCreateUser }) {
         if (!email) return;
 
         if (isCreating) {
-            handleCreateUser({ email, name });
+            var result = handleCreateUser(email);
+
+            if(result){
+                setIsCreating(false)
+                setEmail("")
+            }
+            
         } else {
             handleLogin(email);
         }
@@ -19,9 +24,10 @@ export default function Login({ handleLogin, handleCreateUser }) {
     return (
         <div style={styles.container}>
             <form onSubmit={handleSubmit} style={styles.card}>
-                <h2>{isCreating ? "Create Account" : "Sign In"}</h2>
+                <h2 style={styles.title}>
+                    {isCreating ? "Create Account" : "Sign In"}
+                </h2>
 
-                {/* Email input */}
                 <input
                     type="email"
                     placeholder="Email address"
@@ -63,6 +69,9 @@ const styles = {
         width: "300px",
         textAlign: "center",
         color: "white",
+    },
+    title:{
+        color:"black"
     },
     input: {
         width: "100%",

@@ -2,6 +2,7 @@ import React from "react";
 
 export default function WatchlistCard({ WID, watchlistData, deleteWatchlist }) {
     const alerts = watchlistData.alerts
+    
     return (
         <div style={styles.card} key={WID}>
             <button

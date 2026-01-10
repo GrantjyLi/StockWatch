@@ -53,7 +53,21 @@ func DB_CheckLogin(loginReq *LoginRequest_t) (string, error) {
 	return userID, nil
 }
 
-func DB_writeWatchlist(createWatchlistReq *CreateWatchlistRequest_t) error {
+func DB_createUser(createUserReq *CreateUserRequest_t) error {
+	_, err := database.Exec(`
+		INSERT INTO users (id, email)
+		VALUES ($1, $2);`,
+		uuid.New().String(),
+		createUserReq.User_email,
+	)
+
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func DB_createWatchlist(createWatchlistReq *CreateWatchlistRequest_t) error {
 	tx, err := database.Begin()
 
 	if err != nil {

@@ -7,7 +7,7 @@ import WatchlistGrid from "./components/WatchlistGrid";
 import AddWatchlistPopup from "./components/AddWatchlistPopup";
 import ErrorPopup from "./components/ErrorMSGPopup";
 import WarningPopup from "./components/WarningMSGPopup";
-import { checkHealth, login, getWatchlists, deleteWatchlist, createWatchlist } from "./APIInterface"
+import { checkHealth, login, createUser, getWatchlists, deleteWatchlist, createWatchlist } from "./APIInterface"
 
 export default function App() {
     const [serverStatus, setServerStatus] = useState(false);
@@ -21,12 +21,16 @@ export default function App() {
     const [showAddWatchlistPopup, setShowAddPopup] = useState(false);
     const [delWID, setDelWID] = useState(null); // wathclist ID when the user wants to delete one
 
+    function handleErrorPopup(errorMessage){
+        setErrorPopup(true)
+        setErrorMessage(errorMessage)
+    }
+
     async function healthCheck(){
         const health = await checkHealth();
         
         if (health === null) {
-            setErrorPopup(true)
-            setErrorMessage("Server is Down")
+            handleErrorPopup("Server is Down")
             return
         }
         
@@ -35,17 +39,36 @@ export default function App() {
     }
 
     async function handleLogin(email) {
-        var login_userID = await login(email)
-        
-        if (login_userID){
-            localStorage.setItem("userID", login_userID.userID);
-            localStorage.setItem("userEmail", email);
-
-            setUserEmail(email)
-            setUserId(login_userID.userID)
-        }else{
-            alert("Failed login for email: " + email)
+        var loginData = {
+            "email": email
         }
+
+        var result = await login(loginData)
+
+        if(!result.ok){
+            handleErrorPopup("Failed login for email: " + email)
+            return
+        }
+        const login_userID = result.data.userID
+        localStorage.setItem("userID", login_userID);
+        localStorage.setItem("userEmail", email);
+
+        setUserEmail(email)
+        setUserId(login_userID)
+    };
+
+    async function handleCreateUser(email) {
+        var userData = {
+            "email": email
+        }
+        var result = await createUser(userData)
+        
+        if (!result.ok){
+            handleErrorPopup("Failed to create new user: " + result.data)
+            return false
+        }
+        alert("User with email " + email + " has been created, proceed to login with it.")
+        return true
     };
 
     const handleLogout = () => {
@@ -56,8 +79,12 @@ export default function App() {
     }
 
     async function fetchWatchlists() {
-        const data = await getWatchlists(userID);
-        setWatchlists(data);
+        var fetchWLData = {
+            "ID": userID
+        }
+        const result = await getWatchlists(fetchWLData);
+        var watchlistData = result.data
+        setWatchlists(watchlistData);
     }
 
     async function init() {
@@ -96,9 +123,15 @@ export default function App() {
                 "alerts": newAlerts
             }
         }
-        await createWatchlist(newWatchlistDataJson)
+        var result = await createWatchlist(newWatchlistDataJson)
         setShowAddPopup(false)
-        await  fetchWatchlists();
+
+        if (!result.ok){
+            handleErrorPopup("Could not create watchlist: " + result.data)
+            return
+        }
+
+        await fetchWatchlists();
     }
 
     const delWatchlistConfirm = (watchlistID, watchlistName) =>{
@@ -113,14 +146,21 @@ export default function App() {
         var deleteWLJson = {
             "ID": delWID
         }
-        await deleteWatchlist(deleteWLJson)
+        var result = await deleteWatchlist(deleteWLJson)
         setDelWID(null)
+        if (!result.ok){
+            handleErrorPopup("Could not delete watchlist: " + result.data)
+            return
+        }
         await fetchWatchlists();
     }
 
     if (!userID) {
         return <>
-        <Login handleLogin={handleLogin} />;
+            <Login 
+                handleLogin={handleLogin}
+                handleCreateUser={handleCreateUser}
+            />;
             {errorPopup && (
                 <ErrorPopup 
                     message={errorMessage}
