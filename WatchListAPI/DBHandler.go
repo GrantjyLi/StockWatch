@@ -30,7 +30,6 @@ func DB_connect() *sql.DB {
 	// ping to verify that the database connection is alive/establishable
 	pingErr := db.Ping()
 	if pingErr != nil {
-		// log.Fatal prints the error and then calls os.Exit(1).
 		log.Fatal(pingErr)
 	}
 	return db
