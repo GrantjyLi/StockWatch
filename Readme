@@ -1,8 +1,19 @@
 Current Status: Down
 
-Application for users to create their own stock watchlists and set email alerts 
+Application for users to create their own stock watchlists and set email alerts
 
-Each directory is its own module.
+Modules hosted on AWS ECS + Farget:
+    ./WatchlistAPI
+    ./RabbitMQ
+    ./AlertsPoller  
+    ./AlertsEvaluator
+    ./EmailSender
+
+Modules stored on AWS S3:
+    ./StockwatchIU
+
+AWS RDS database:
+    ./Database
 
 System architecture:
     StockwatchUI --> watchlistAPI --> AWS RDS database
