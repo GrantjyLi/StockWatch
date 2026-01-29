@@ -86,8 +86,9 @@ The frontend uses Vite; dev server will be available at the URL printed by Vite 
 ## Environment variables
 Check the global `.env_example` to see common variables used by services (check each service's source for exact names):
 
+Environment file passed in `compose.yaml` testing, but should be included when creating the task on AWS ECS.
 
-Refer to each service's source or `compose.yaml` for exact environment variable names and defaults.
+Front-end in `StockwatchUI` also has its own `.env_example`
 
 - For local Go services, run them in a terminal to see stdout logs.
 
