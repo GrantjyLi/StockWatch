@@ -1,10 +1,10 @@
 # StockWatch
 
-StockWatch is a small microservice-based system for monitoring stock prices, evaluating alerts, and notifying users. The repository contains backend services (written in Go), a React frontend, database initialization SQL, and helper tooling for running everything with Docker.
+StockWatch is a microservice-based system for monitoring stock prices, evaluating alerts, and notifying users. The repository contains backend services (written in Go), a React frontend, database initialization SQL, and helper tooling for running everything with Docker.
 
 Microservices hosted on AWS ECS
 Database is AWS RDS PostgreSQL
-Front-end is sotre in AWS S3
+Front-end is stored in AWS S3
 
 ## Repository layout
 
