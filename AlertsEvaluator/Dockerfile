@@ -1,22 +1,17 @@
-# --- Build stage ---
-FROM golang:1.25 AS builder
+FROM maven:3.9.9-eclipse-temurin-17 AS builder
 
-WORKDIR /AlertsEvaluator
+WORKDIR /workspace
 
-# Copy go.mod and go.sum first (better caching)
-COPY go.mod go.sum ./
-RUN go mod download
-COPY . .
+COPY pom.xml ./
+RUN mvn -q dependency:go-offline
 
-# Build the Go binary
-RUN CGO_ENABLED=0 GOOS=linux go build -o AlertsEvaluator .
+COPY src ./src
+RUN mvn -q -DskipTests package
 
-# --- Run stage ---
-FROM alpine:latest
+FROM eclipse-temurin:17-jre
 
-WORKDIR /AlertsEvaluator
+WORKDIR /app
 
-COPY --from=builder /AlertsEvaluator/AlertsEvaluator .
+COPY --from=builder /workspace/target/*.jar app.jar
 
-
-CMD ["./AlertsEvaluator"]
+ENTRYPOINT ["java", "-jar", "/app/app.jar"]
